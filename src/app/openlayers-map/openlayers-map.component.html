@@ -1,0 +1,19 @@
+<!-- Map container -->
+<div #mapElement id="map"></div>
+
+<!-- Controls for the map -->
+<div id="controls">
+  <button (click)="finalizePath()">Finalize Path</button>
+  <button (click)="clearPath()">Clear Path</button>
+  <button (click)="toggleBaseLayer()">Toggle Base Layer</button>
+</div>
+
+<!-- Display Waypoints -->
+<div id="waypoints">
+  <h3>Waypoints:</h3>
+  <ul>
+    <li *ngFor="let waypoint of waypoints; let i = index">
+      Waypoint {{ i + 1 }}: {{ waypoint.latitude | number:'1.6-6' }}, {{ waypoint.longitude | number:'1.6-6' }}
+    </li>
+  </ul>
+</div>

@@ -1,0 +1,15 @@
+<div class="routes-header"> Created Routes </div>
+<div *ngIf="routes && routes.length; else noRoutes">
+      <div *ngFor="let route of routes" 
+        class="route-name"
+        (click)="selectRoute(route)"
+        [ngClass]="{'selected': selectedRoute?.route_id === route.route_id}">
+        {{ route.name }}
+      </div>
+</div>
+
+<app-waypoints [route]="selectedRoute" [waypoints]="waypoints"></app-waypoints>
+  
+<ng-template #noRoutes>
+    <p>No routes available.</p>
+</ng-template>

@@ -1,0 +1,17 @@
+#map {
+    width: 80vw;
+    height: 80vh;
+    border: 2px solid black;
+}
+  
+#controls {
+    margin-top: 10px;
+}
+  
+#waypoints {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f4f4f4;
+    border-radius: 5px;
+    max-width: 400px;
+}

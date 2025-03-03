@@ -1,0 +1,22 @@
+<div class="content">
+    <div class="route-name">
+        {{route?.name}}
+    </div>
+    <div style="display: grid; grid-template-columns: auto auto; gap: 3px; width: fit-content;">
+        <!-- Header row -->
+        <div><strong>Latitude</strong></div>
+        <div><strong>Longitude</strong></div>
+    
+        <!-- Data rows -->
+        <ng-container *ngIf="waypoints.length > 0; else noWaypoints" >
+            <ng-container *ngFor="let waypoint of waypoints">
+                <div>{{ waypoint.latitude }}</div>
+                <div>{{ waypoint.longitude }}</div>
+            </ng-container>
+        </ng-container>
+    </div>
+</div>
+
+<ng-template #noWaypoints>
+    <div style="width: 100px;"> No waypoints for selected route </div>
+</ng-template>

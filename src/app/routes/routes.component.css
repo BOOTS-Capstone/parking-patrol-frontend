@@ -1,0 +1,15 @@
+.content {
+    margin-bottom: 100px;
+}
+
+.routes-header {
+    font-size: 20pt;
+}
+
+.route-name {
+    border: 1px solid black;
+    border-radius: 5px;
+} .route-name.selected {
+    background-color: gray;
+    cursor: pointer;
+}
