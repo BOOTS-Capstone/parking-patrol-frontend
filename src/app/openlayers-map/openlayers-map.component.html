@@ -1,3 +1,8 @@
+<div id="search-controls">
+    <input #addressInput type="text" placeholder="Enter address..." />
+    <button (click)="searchAddress(addressInput.value)">Search</button>
+</div>
+
 <!-- Map container -->
 <div #mapElement id="map"></div>
 

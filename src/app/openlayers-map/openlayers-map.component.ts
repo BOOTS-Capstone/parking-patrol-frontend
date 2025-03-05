@@ -126,6 +126,9 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       this.waypoints.push(newWaypoint);
       // Update the path using the updated waypoints.
       this.updatePath('red');
+      this.mapDataService.updateWaypoints(this.waypoints);
+      this.mapDataService.setRouteEdited(true);
+      console.log(this.waypoints)
     });
   }
 
@@ -153,6 +156,8 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   // Clear the current path.
   clearPath(): void {
     this.waypoints = [];
+    this.markerSource.clear();
+    this.mapDataService.setRouteEdited(false);
     this.pathFeature.setGeometry(undefined);
   }
 
@@ -180,9 +185,38 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     });
     this.updatePath('red');
     // Optionally, adjust the view to show all markers.
-    if (waypoints.length > 0) {
+    if (waypoints.length > 1) {
       const extent = this.markerSource.getExtent();
       this.map.getView().fit(extent, { duration: 1000, padding: [200, 200, 200, 200] });
     }
+    console.log(this.waypoints);
   }
+
+    // New method to search for an address using Nominatim.
+    searchAddress(address: string): void {
+      // Construct the URL for the Nominatim API.
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+      
+      // Fetch the geocoding results.
+      fetch(url)
+        .then(response => response.json())
+        .then(results => {
+          if (results && results.length > 0) {
+            // For this example, take the first result.
+            const result = results[0];
+            const lon = parseFloat(result.lon);
+            const lat = parseFloat(result.lat);
+            const coordinate = fromLonLat([lon, lat]);
+            // Animate the map view to the result.
+            if (this.waypoints.length > 1) {
+              this.map.getView().animate({ center: coordinate, zoom: 16, duration: 1000 });
+            }
+          } else {
+            console.error('No results found for address:', address);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching geocoding results:', error);
+        });
+    }
 }

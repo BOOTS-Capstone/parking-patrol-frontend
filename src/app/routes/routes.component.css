@@ -9,6 +9,7 @@
 .route-name {
     border: 1px solid black;
     border-radius: 5px;
+    width: fit-content;
 } .route-name.selected {
     background-color: gray;
     cursor: pointer;
