@@ -1,12 +1,16 @@
 <div class="routes-header"> Created Routes </div>
 <div *ngIf="routes && routes.length; else noRoutes">
-    <div *ngFor="let route of routes" style="display: grid; justify-content: start; grid-template-columns: auto auto; column-gap: 10px; margin: 10px;">
+    <div *ngFor="let route of routes" style="display: grid; justify-content: start; grid-template-columns: auto auto auto; column-gap: 10px; margin: 10px;">
         <div class="route-name" (click)="selectRoute(route)" [ngClass]="{'selected': selectedRoute?.route_id === route.route_id}">
             {{ route.name }}
         </div>
         <div>
+            <button (click)="editRoute(route)" *ngIf="selectedRoute == route">Edit</button>
+            <button (click)="saveRoute()" *ngIf="editingRoute == route">Save</button>
+        </div>
+        <div>
             <button (click)="deleteRoute(route)" title="Delete Route">X</button>
-            <button *ngIf="routeEdited && selectedRoute == route "> Update Route </button>
+            <button *ngIf="routeEdited && selectedRoute == route" (click)="updateRoute(route)"> Update Route </button>
         </div>
     </div>
 </div>

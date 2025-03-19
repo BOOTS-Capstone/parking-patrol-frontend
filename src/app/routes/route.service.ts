@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Route } from './route';
 import { Waypoint } from '../waypoint';
+import { MapDataService } from '../map-data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,9 @@ import { Waypoint } from '../waypoint';
 export class RouteService {
   private baseUrl = 'http://127.0.0.1:8000';
 
-  constructor(private http: HttpClient) {}
+  private updatedWaypoints: Waypoint[] = [];
+
+  constructor(private http: HttpClient, private mapDataService: MapDataService) {}
 
   getRoutes(): Observable<Route[]> {
     return this.http.get<Route[]>(`${this.baseUrl}/getRoutes`);
@@ -24,8 +27,11 @@ export class RouteService {
     return this.http.get(`${this.baseUrl}/deleteRoute/${route.route_id}`)
   }
 
-  // updateRoute(route: Route): Observable<any> {
-  //   var updatedRoute = {route_id: route.route_id, name: route.name, waypoints: route};
-  //   return this.http.post(`${this.baseUrl}/updateRoute`)
-  // }
+  updateRoute(route: Route): Observable<any> {
+    this.mapDataService.waypoints$.subscribe(waypoints => {
+      this.updatedWaypoints = waypoints;
+    })
+    var updatedRoute = {route_id: route.route_id, name: route.name, waypoints: this.updatedWaypoints};
+    return this.http.post(`${this.baseUrl}/updateRoute`, updatedRoute)
+  }
 }

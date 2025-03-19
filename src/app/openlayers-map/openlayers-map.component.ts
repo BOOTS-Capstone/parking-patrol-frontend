@@ -99,8 +99,8 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       source: this.markerSource,
       style: new Style({
         image: new Icon({
-          src: 'https://openlayers.org/en/v6.5.0/examples/data/icon.png', // Replace with your marker image path.
-          scale: 1
+          src: 'upload.png', // Replace with your marker image path.
+          scale: 0.05,
         })
         // For testing purposes, you could use a simple circle style:
         // image: new CircleStyle({
@@ -120,14 +120,14 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         latitude: coordinate[1],
         longitude: coordinate[0],
         waypoint_id: 0,
-        route_id: 0
+        route_id: 0,
+        degrees_from_north: 0
       };
       // Add the new waypoint to the array.
       this.waypoints.push(newWaypoint);
       // Update the path using the updated waypoints.
       this.updatePath('red');
       this.mapDataService.updateWaypoints(this.waypoints);
-      this.mapDataService.setRouteEdited(true);
       console.log(this.waypoints)
     });
   }
@@ -157,7 +157,6 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   clearPath(): void {
     this.waypoints = [];
     this.markerSource.clear();
-    this.mapDataService.setRouteEdited(false);
     this.pathFeature.setGeometry(undefined);
   }
 
@@ -178,9 +177,18 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     waypoints.forEach((wp: Waypoint) => {
       // Convert from longitude/latitude to the map projection.
       const coordinate = fromLonLat([wp.longitude, wp.latitude]);
+      const rotation = wp.degrees_from_north ? wp.degrees_from_north * (Math.PI / 180) : 0;
       const feature = new Feature({
         geometry: new Point(coordinate)
       });
+      feature.setStyle(new Style({
+        image: new Icon({
+          src: 'upload.png',
+          // anchor: [1, 1],
+          rotation: rotation,
+          scale: 0.05
+        })
+      }));
       this.markerSource.addFeature(feature);
     });
     this.updatePath('red');

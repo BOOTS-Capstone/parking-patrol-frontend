@@ -17,6 +17,7 @@ export class RoutesComponent implements OnInit {
   routes: Route[] = [];
   waypoints: Waypoint[] = [];
   selectedRoute: Route | null = null;
+  editingRoute: Route | null = null;
   newRouteName: string = '';
 
   routeEdited: boolean = false;
@@ -29,7 +30,7 @@ export class RoutesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadRoutes();
-    this.mapDataService.routeEdited$.subscribe((edited: boolean) => {
+    this.mapDataService.allowRouteEditing$.subscribe((edited: boolean) => {
       this.routeEdited = edited;
       console.log('Route edited:', edited);
     });
@@ -49,6 +50,8 @@ export class RoutesComponent implements OnInit {
 
   selectRoute(route: Route) {
     this.selectedRoute = route;
+    this.editingRoute = null;
+    this.mapDataService.setRouteBeingEdited(null);
     console.log("Selected route: " + route.route_id);
     this.getWaypointsOfRoute(route);
   }
@@ -60,6 +63,30 @@ export class RoutesComponent implements OnInit {
       // Update the shared map data service with the new waypoints.
       this.mapDataService.updateWaypoints(waypoints);
     });
+  }
+
+  editRoute(route: Route): void {
+    // Clone the selected route so we don't modify the original before saving
+    this.editingRoute = route;
+    this.mapDataService.setRouteBeingEdited(this.editingRoute);
+  }
+
+  cancelEdit(): void {
+    this.editingRoute = null; // Exit editing mode without saving
+  }
+
+  saveRoute(): void {
+    if (!this.editingRoute) return;
+    var route: any; //this is Route type
+    this.mapDataService.routeBeingEdited$.subscribe(
+      routeinfo => {route = routeinfo;
+      console.log('routeinfo ' + JSON.stringify(routeinfo))
+      this.updateRoute(route);
+    })
+    // this.mapDataService.setRouteBeingEdited(null);
+    // console.log(route);
+    // this.mapDataService.setRouteBeingEdited(null);
+    // Send the updated route to the backend
   }
 
 
@@ -108,7 +135,7 @@ export class RoutesComponent implements OnInit {
       this.waypoints = waypoints;
     })
     const newRoute = { name: this.newRouteName, waypoints: this.waypoints };
-    this.routeService.createRoute(newRoute).subscribe(
+    this.routeService.updateRoute(route).subscribe(
       response => {
         console.log('New route created:', response);
         // Optionally, refresh the routes list.

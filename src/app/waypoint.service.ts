@@ -3,9 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Waypoint } from './waypoint';
 
-import { map } from 'rxjs';
-import { createMayBeForwardRefExpression } from '@angular/compiler';
-
 @Injectable({
   providedIn: 'root'
 })
