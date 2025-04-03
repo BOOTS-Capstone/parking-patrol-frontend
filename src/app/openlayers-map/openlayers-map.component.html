@@ -4,7 +4,7 @@
 </div>
 
 <!-- Map container -->
-<div #mapElement id="map"></div>
+<div #mapElement id="map" [ngClass]="(liveStatusView ? 'live-status' : '')"></div>
 
 <!-- Controls for the map -->
 <div id="controls">

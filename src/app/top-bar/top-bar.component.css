@@ -1,0 +1,18 @@
+.main-content {
+    background-color: rgb(128, 220, 236);
+    height: fit-content;
+    padding: 5px;
+    margin-bottom: 10px;
+}
+.nav-links {
+    display: flex;
+    column-gap: 10px;
+    justify-content: flex-end;
+} 
+
+.nav-link {
+
+} .nav-link:hover {
+    transition: transform 100ms;
+    transform: scale(1.03);
+}

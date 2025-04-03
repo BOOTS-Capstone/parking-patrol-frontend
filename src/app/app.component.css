@@ -1,5 +1,3 @@
-.main-content {
-    display: grid;
-    grid-template-columns: 80vw 20vw;
-    column-gap: 10px;
+:root {
+    margin: 0;
 }
