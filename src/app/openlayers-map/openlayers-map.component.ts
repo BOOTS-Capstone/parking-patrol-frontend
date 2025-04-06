@@ -17,6 +17,7 @@ import { Waypoint } from '../waypoint'; // Your Waypoint interface
 import { LiveStatusService } from '../live-status/live-status.service';
 import { Violation } from '../violation';
 import { env } from '../../../env';
+import { DroneState } from '../live-status/drone-state';
 
 @Component({
   selector: 'app-openlayers-map',
@@ -35,7 +36,8 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   
   // For drawing a temporary path using Waypoint objects.
   waypoints: Waypoint[] = [];
-  violations: Violation[] = []
+  violations: Violation[] = [];
+  drone_state!: DroneState;
   pathFeature!: Feature;
   vectorSource!: VectorSource;
   vectorLayer!: VectorLayer;
@@ -62,6 +64,11 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         this.updateMapWithViolations(violations);
         console.log(violations);
       });
+      this.liveStatusService.getDroneState().subscribe(drone_state => {
+        this.drone_state = drone_state;
+        this.updateMapWithDroneState(drone_state);
+        console.log(drone_state);
+      })
     }
     
     else {
@@ -85,10 +92,10 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     this.satelliteLayer = new TileLayer({
       source: new XYZ({
         //maptiler URL (requires API key)
-        url: 'https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=' + maptilerKey
+        // url: 'https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=' + maptilerKey
 
         //free map URL (use for testing purposes)
-        // url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
       }),
       visible: true // start with satellite view enabled
     });
@@ -248,7 +255,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   // Update the marker layer with new waypoints.
   updateMapWithViolations(violations: Violation[]): void {
     // Clear existing markers.
-    this.markerSource.clear();
+    // this.markerSource.clear();
     this.pathFeature.setGeometry(undefined);
 
 
@@ -275,6 +282,28 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     }
     
   }
+
+    // Update the marker layer with new waypoints.
+    updateMapWithDroneState(drone_state: DroneState): void {
+      // Clear existing markers.
+      this.pathFeature.setGeometry(undefined);
+
+      // Convert from longitude/latitude to the map projection.
+      const coordinate = fromLonLat([drone_state.long, drone_state.lat]);
+      const feature = new Feature({
+        geometry: new Point(coordinate)
+      });
+      feature.setStyle(new Style({
+        image: new Icon({
+          src: 'drone.png',
+          // anchor: [1, 1],
+          scale: 0.1
+        })
+      }));
+      this.markerSource.addFeature(feature);
+      const extent = this.markerSource.getExtent();
+      this.map.getView().fit(extent, { duration: 500, padding: [500, 500, 500, 500] });
+    }
   
 
   // Update the marker layer with new waypoints.
