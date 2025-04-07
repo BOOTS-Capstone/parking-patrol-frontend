@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Violation } from '../violation';
 import { DroneState } from './drone-state';
+
+export type ViolationFilterType = 'all' | 'resolved' | 'unresolved';
 
 @Injectable({
   providedIn: 'root'
@@ -14,9 +16,9 @@ export class LiveStatusService {
 
   }
 
-  getViolations(): Observable<Violation[]> {
-    const url = `${environment.apiURL}/violations`;
-    return this.httpClient.get<Violation[]>(url);
+  getViolations(filter: ViolationFilterType = 'unresolved'): Observable<Violation[]> {
+    var params = new HttpParams().set("violation_type", filter)
+    return this.httpClient.get<Violation[]>(`${environment.apiURL}/violations`, {params});
   }
 
   getDroneState(): Observable<DroneState> {

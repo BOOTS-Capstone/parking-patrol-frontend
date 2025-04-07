@@ -1,7 +1,6 @@
 import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, Input } from '@angular/core';
 import { interval, Subscription } from 'rxjs';
 import { takeWhile } from 'rxjs';
-//openlayers imports
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -14,13 +13,13 @@ import VectorLayer from 'ol/layer/Vector';
 import { LineString, Point } from 'ol/geom';
 import Overlay from 'ol/Overlay';
 import { Stroke, Style, Icon } from 'ol/style';
-
 import { MapDataService } from '../map-data.service';
-import { Waypoint } from '../waypoint'; // Your Waypoint interface
+import { Waypoint } from '../waypoint';
 import { LiveStatusService } from '../live-status/live-status.service';
 import { Violation } from '../violation';
 import { env } from '../../../env';
 import { DroneState } from '../live-status/drone-state';
+import { ViolationFilterType } from '../live-status/live-status.service';
 
 @Component({
   selector: 'app-openlayers-map',
@@ -29,45 +28,51 @@ import { DroneState } from '../live-status/drone-state';
   styleUrls: ['./openlayers-map.component.css']
 })
 export class OpenlayersMapComponent implements OnInit, AfterViewInit {
-  
   @Input() liveStatusView: boolean = false;
   @ViewChild('mapElement', { static: false }) mapElement!: ElementRef;
   @ViewChild('popupElement', { static: false }) popupElement!: ElementRef;
 
+  // Map components
   map!: Map;
   osmLayer!: TileLayer;
   satelliteLayer!: TileLayer;
   
-  // For drawing a temporary path using Waypoint objects.
+  // Data stores
   waypoints: Waypoint[] = [];
   violations: Violation[] = [];
   drone_state!: DroneState;
+  
+  // Vector layers
   pathFeature!: Feature;
   vectorSource!: VectorSource;
   vectorLayer!: VectorLayer;
-
-  // Marker layer for displaying waypoints.
   markerSource!: VectorSource;
   markerLayer!: VectorLayer;
-
   overlay!: Overlay;
+  
+  // UI state
   popupContent: string = '';
-
+  violationFilter: ViolationFilterType = 'unresolved';
+  filterOptions = [
+    { value: 'unresolved', label: 'Show Unresolved Only' },
+    { value: 'resolved', label: 'Show Resolved Only' },
+    { value: 'all', label: 'Show All Violations' }
+  ];
+  lastUpdateTime = new Date();
+  
+  // Subscriptions and flags
   private dronePollingSubscription?: Subscription;
   private isActive = true;
-  lastUpdateTime = new Date();
-
   private allowEditing: boolean = false;
 
   constructor(private mapDataService: MapDataService, private liveStatusService: LiveStatusService) {}
 
   ngOnInit(): void {
     this.mapDataService.allowRouteEditing$.subscribe(allowEditing => {this.allowEditing = allowEditing});
-   }
+  }
 
-   ngAfterViewInit(): void {
+  ngAfterViewInit(): void {
     this.initializeMap();
-    
     if (this.liveStatusView) {
       this.setupLiveStatusView();
     } else {
@@ -83,16 +88,11 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   }
 
   private setupLiveStatusView(): void {
-    // Setup violations display
-    this.liveStatusService.getViolations().subscribe(violations => {
+    this.liveStatusService.getViolations(this.violationFilter).subscribe(violations => {
       this.violations = violations;
       this.updateMapWithViolations(violations);
     });
-
-    // Setup drone polling
     this.startDronePolling();
-
-    // Setup popup interaction
     this.setupMapHoverInteraction();
   }
 
@@ -101,17 +101,13 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       this.waypoints = waypoints;
       this.updateMapWithWaypoints(waypoints);
     });
-
     if (this.allowEditing) {
       this.setupMapClickInteraction();
     }
   }
 
   private startDronePolling(): void {
-    // Initial load
     this.fetchDroneState();
-    
-    // Start polling every 10 seconds
     this.dronePollingSubscription = interval(10000)
       .pipe(takeWhile(() => this.isActive))
       .subscribe(() => {
@@ -138,40 +134,35 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       const feature = this.map.forEachFeatureAtPixel(pixel, f => f, {
         hitTolerance: 5
       });
-      
       if (feature) {
         const geometry = feature.getGeometry();
         if (geometry instanceof Point) {
           const coords = toLonLat(geometry.getCoordinates());
-          
           const violation: Violation = feature.get('violation');
           const droneState: DroneState = feature.get('drone_state');
-          
           if (violation) {
             const timestamp = new Date(violation.timestamp);
             this.popupContent = `
               <strong>Violation</strong><br>
               <strong>Plate:</strong> ${violation.plate_number} (${violation.plate_state})<br>
-              <strong>Latitude:</strong> ${coords[1].toFixed(6)}<br>
-              <strong>Longitude:</strong> ${coords[0].toFixed(6)}<br>
+              <strong>Latitude:</strong> ${coords[1]}<br>
+              <strong>Longitude:</strong> ${coords[0]}<br>
               <strong>Date:</strong> ${timestamp.toLocaleDateString()}<br>
               <strong>Time:</strong> ${timestamp.toLocaleTimeString()}<br>
             `;
           } else if (droneState) {
             this.popupContent = `
               <strong><u>Drone Location</u></strong><br>
-              <strong>Latitude:</strong> ${coords[1].toFixed(6)}<br>
-              <strong>Longitude:</strong> ${coords[0].toFixed(6)}<br>
+              <strong>Latitude:</strong> ${coords[1]}<br>
+              <strong>Longitude:</strong> ${coords[0]}<br>
               <strong>Last Update:</strong> ${this.lastUpdateTime.toLocaleTimeString()}
             `;
           }
-          
           this.overlay.setPosition(geometry.getCoordinates());
           this.popupElement.nativeElement.style.display = 'block';
           return;
         }
       }
-      
       this.overlay.setPosition(undefined);
       this.popupElement.nativeElement.style.display = 'none';
     });
@@ -187,19 +178,16 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         route_id: 0,
         degrees_from_north: 0
       };
-      
       this.waypoints.push(newWaypoint);
       this.updatePath('red');
       this.mapDataService.updateWaypoints(this.waypoints);
     });
   }
 
-
   initializeMap(): void {
-    // Initialize the base layers.
     this.osmLayer = new TileLayer({
       source: new OSM(),
-      visible: false // start with satellite view hidden
+      visible: false
     });
 
     var maptilerKey = env.maptilerAPIKey;
@@ -208,15 +196,13 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         //maptiler URL (requires API key)
         // url: 'https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=' + maptilerKey
 
-        //free map URL (use for testing purposes)
+        //free map
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
       }),
-      visible: true // start with satellite view enabled
+      visible: true
     });
 
-    //we only want to draw the drone's location and violation locations
     if (this.liveStatusView) {
-      // Initialize t he map centered on College Station, TX.
       this.map = new Map({
         target: this.mapElement.nativeElement,
         layers: [this.satelliteLayer, this.osmLayer],
@@ -225,10 +211,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
           zoom: 19
         })
       });
-      // Create a feature to hold the drawn path.
       this.pathFeature = new Feature();
-
-      // Create a vector source and layer for the drawn path.
       this.vectorSource = new VectorSource({ features: [this.pathFeature] });
       this.vectorLayer = new VectorLayer({
         source: this.vectorSource,
@@ -240,37 +223,23 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         })
       });
       this.map.addLayer(this.vectorLayer);
-      // Create a marker source and layer for the waypoints.
       this.markerSource = new VectorSource();
       this.markerLayer = new VectorLayer({
         source: this.markerSource,
         style: new Style({
           image: new Icon({
-            src: 'upload.png', // Replace with your marker image path.
+            src: 'upload.png',
             scale: 0.05,
           })
-          // For testing purposes, you could use a simple circle style:
-          // image: new CircleStyle({
-          //   radius: 6,
-          //   fill: new Fill({ color: 'blue' })
-          // })
         })
       });
       this.map.addLayer(this.markerLayer);
-
-    // // 4) Create overlay for popup
-     this.overlay = new Overlay({
-      element: this.popupElement.nativeElement,
-      autoPan: false,
-      // autoPanAnimation: { duration: 250 }
-    });
-    this.map.addOverlay(this.overlay);
-
-    }
-
-
-    else {
-      // Initialize the map centered on College Station, TX.
+      this.overlay = new Overlay({
+        element: this.popupElement.nativeElement,
+        autoPan: false,
+      });
+      this.map.addOverlay(this.overlay);
+    } else {
       this.map = new Map({
         target: this.mapElement.nativeElement,
         layers: [this.satelliteLayer, this.osmLayer],
@@ -279,11 +248,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
           zoom: 17
         })
       });
-
-      // Create a feature to hold the drawn path.
       this.pathFeature = new Feature();
-
-      // Create a vector source and layer for the drawn path.
       this.vectorSource = new VectorSource({ features: [this.pathFeature] });
       this.vectorLayer = new VectorLayer({
         source: this.vectorSource,
@@ -295,29 +260,20 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         })
       });
       this.map.addLayer(this.vectorLayer);
-
-      // Create a marker source and layer for the waypoints.
       this.markerSource = new VectorSource();
       this.markerLayer = new VectorLayer({
         source: this.markerSource,
         style: new Style({
           image: new Icon({
-            src: 'upload.png', // Replace with your marker image path.
+            src: 'upload.png',
             scale: 0.05,
           })
         })
       });
       this.map.addLayer(this.markerLayer);
-
-      // Add a click event to capture coordinates for the drawn path.
       this.map.on('click', (event) => {
-        if (!this.allowEditing) {
-          // If not in edit mode, ignore clicks.
-          return;
-        }
-        // Convert clicked coordinate to [longitude, latitude]
+        if (!this.allowEditing) return;
         const coordinate = toLonLat(event.coordinate);
-        // Create a Waypoint object (note: toLonLat returns [lon, lat])
         const newWaypoint: Waypoint = {
           latitude: coordinate[1],
           longitude: coordinate[0],
@@ -325,21 +281,15 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
           route_id: 0,
           degrees_from_north: 0
         };
-        // Add the new waypoint to the array.
         this.waypoints.push(newWaypoint);
-        // Update the path using the updated waypoints.
         this.updatePath('red');
         this.mapDataService.updateWaypoints(this.waypoints);
-        // console.log(this.waypoints)
       });
-      
     }
   }
 
-  // Update the drawn path with a specified color using the Waypoint objects.
   updatePath(color: string): void {
-    if (this.waypoints.length < 2) return; // need at least 2 points for a line
-    // Map each Waypoint to the coordinate array expected by fromLonLat.
+    if (this.waypoints.length < 2) return;
     const transformedCoords = this.waypoints.map(wp =>
       fromLonLat([wp.longitude, wp.latitude])
     );
@@ -352,100 +302,97 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     }));
   }
 
-  // Finalize the path by changing its color to blue.
   finalizePath(): void {
     this.updatePath('blue');
   }
 
-  // Clear the current path.
   clearPath(): void {
     this.waypoints = [];
     this.markerSource.clear();
     this.pathFeature.setGeometry(undefined);
   }
 
-  // Toggle between satellite and OSM base layers.
   toggleBaseLayer(): void {
     const isSatelliteVisible = this.satelliteLayer.getVisible();
     this.satelliteLayer.setVisible(!isSatelliteVisible);
     this.osmLayer.setVisible(isSatelliteVisible);
   }
 
-  // Update the marker layer with new waypoints.
+  onViolationFilterChange(): void {
+    this.updateViolations();
+  }
+
+  private updateViolations(): void {
+    this.liveStatusService.getViolations(this.violationFilter).subscribe(
+      violations => {
+        this.violations = violations;
+        this.updateMapWithViolations(violations);
+      });
+  }
+
   updateMapWithViolations(violations: Violation[]): void {
-    // Clear existing markers.
-    // this.markerSource.clear();
+    const features = this.markerSource.getFeatures();
+    const violationFeatures = features.filter(f => f.get('violation'));
+    violationFeatures.forEach(f => this.markerSource.removeFeature(f));
     this.pathFeature.setGeometry(undefined);
 
-
     violations.forEach((violation: Violation) => {
-      console.log(violation);
-      // Convert from longitude/latitude to the map projection.
       const coordinate = fromLonLat([violation.gps_long, violation.gps_lat]);
       const feature = new Feature({
         geometry: new Point(coordinate)
       });
-      feature.setStyle(new Style({
-        image: new Icon({
-          src: 'violation.png',
-          // anchor: [1, 1],
-          scale: 0.05
-        })
-      }));
+      if (violation.resolved == false) {
+        feature.setStyle(new Style({
+          image: new Icon({
+            src: 'violation.png',
+            scale: 0.05
+          })
+        }));
+      }
+      else if (violation.resolved == true) {
+        feature.setStyle(new Style({
+          image: new Icon({
+            src: 'green-check.png',
+            scale: 0.05
+          })
+        }));
+      }
       feature.set('violation', violation);
       this.markerSource.addFeature(feature);
     });
-    // Optionally, adjust the view to show all markers.
     if (violations.length > 1) {
       const extent = this.markerSource.getExtent();
       this.map.getView().fit(extent, { duration: 500, padding: [500, 500, 500, 500] });
     }
-    
   }
 
-    // Update the marker layer with new waypoints.
-    updateMapWithDroneState(drone_state: DroneState): void {
+  updateMapWithDroneState(drone_state: DroneState): void {
+    const features = this.markerSource.getFeatures();
+    const droneFeatures = features.filter(f => f.get('drone_state'));
+    droneFeatures.forEach(f => this.markerSource.removeFeature(f));
+    this.pathFeature.setGeometry(undefined);
 
-      // Clear only drone features (keep violations)
-      const features = this.markerSource.getFeatures();
-      
-      // Find and remove all existing drone markers
-      const droneFeatures = features.filter(f => {
-        // Check for either the old or new identifier
-        return f.get('isDrone') || f.get('drone_state');
-      });
-      
-      droneFeatures.forEach(f => this.markerSource.removeFeature(f));
-      this.pathFeature.setGeometry(undefined);
+    const coordinate = fromLonLat([drone_state.long, drone_state.lat]);
+    const feature = new Feature({
+      geometry: new Point(coordinate)
+    });
+    feature.setStyle(new Style({
+      image: new Icon({
+        src: 'drone.png',
+        scale: 0.1
+      })
+    }));
+    feature.set('drone_state', drone_state);
+    this.markerSource.addFeature(feature);
+    // const extent = this.markerSource.getExtent();
+    // this.map.getView().fit(extent, { duration: 500, padding: [500, 500, 500, 500] });
+  }
 
-      // Convert from longitude/latitude to the map projection.
-      const coordinate = fromLonLat([drone_state.long, drone_state.lat]);
-      const feature = new Feature({
-        geometry: new Point(coordinate)
-      });
-      feature.setStyle(new Style({
-        image: new Icon({
-          src: 'drone.png',
-          // anchor: [1, 1],
-          scale: 0.1
-        })
-      }));
-      feature.set('drone_state', drone_state);
-      this.markerSource.addFeature(feature);
-      const extent = this.markerSource.getExtent();
-      this.map.getView().fit(extent, { duration: 500, padding: [500, 500, 500, 500] });
-    }
-  
-
-  // Update the marker layer with new waypoints.
   updateMapWithWaypoints(waypoints: Waypoint[]): void {
-    // Clear existing markers.
     this.markerSource.clear();
     this.pathFeature.setGeometry(undefined);
 
-
     waypoints.forEach((wp: Waypoint) => {
-      // Convert from longitude/latitude to the map projection.
       const coordinate = fromLonLat([wp.longitude, wp.latitude]);
       const rotation = wp.degrees_from_north ? wp.degrees_from_north * (Math.PI / 180) : 0;
       const feature = new Feature({
@@ -454,7 +401,6 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       feature.setStyle(new Style({
         image: new Icon({
           src: 'upload.png',
-          // anchor: [1, 1],
           rotation: rotation,
           scale: 0.05
         })
@@ -462,30 +408,22 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       this.markerSource.addFeature(feature);
     });
     this.updatePath('red');
-    // Optionally, adjust the view to show all markers.
     if (waypoints.length > 1) {
       const extent = this.markerSource.getExtent();
       this.map.getView().fit(extent, { duration: 1000, padding: [200, 200, 200, 200] });
     }
-    console.log(this.waypoints);
   }
 
-  // New method to search for an address using Nominatim.
   searchAddress(address: string): void {
-    // Construct the URL for the Nominatim API.
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-    
-    // Fetch the geocoding results.
     fetch(url)
       .then(response => response.json())
       .then(results => {
         if (results && results.length > 0) {
-          // For this example, take the first result.
           const result = results[0];
           const lon = parseFloat(result.lon);
           const lat = parseFloat(result.lat);
           const coordinate = fromLonLat([lon, lat]);
-          // Animate the map view to the result.
           if (this.waypoints.length > 1) {
             this.map.getView().animate({ center: coordinate, zoom: 16, duration: 1000 });
           }

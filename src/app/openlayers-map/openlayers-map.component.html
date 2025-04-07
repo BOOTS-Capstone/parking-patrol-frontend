@@ -1,8 +1,19 @@
-<div id="search-controls">
-    <input #addressInput type="text" placeholder="Enter address..." />
-    <button (click)="searchAddress(addressInput.value)">Search</button>
+<div class="live-status-toolbar">
+  <div id="search-controls">
+      <input #addressInput type="text" placeholder="Enter address..." />
+      <button (click)="searchAddress(addressInput.value)">Search</button>
+  </div>
+  <div class="filter-controls">
+      <select [(ngModel)]="violationFilter" 
+      (change)="onViolationFilterChange()"
+      class="violation-filter">
+      <option *ngFor="let option of filterOptions" 
+      [value]="option.value">
+      {{ option.label }}
+    </option>
+    </select>
+  </div>
 </div>
-
 <!-- Map container -->
 <div #mapElement id="map" [ngClass]="(liveStatusView ? 'live-status' : '')"></div>
 <div #popupElement id="popup" class="ol-popup">
