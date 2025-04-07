@@ -1,4 +1,7 @@
 import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, Input } from '@angular/core';
+import { interval, Subscription } from 'rxjs';
+import { takeWhile } from 'rxjs';
+//openlayers imports
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -9,8 +12,8 @@ import Feature from 'ol/Feature';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import { LineString, Point } from 'ol/geom';
+import Overlay from 'ol/Overlay';
 import { Stroke, Style, Icon } from 'ol/style';
-// import 'dotenv/config'
 
 import { MapDataService } from '../map-data.service';
 import { Waypoint } from '../waypoint'; // Your Waypoint interface
@@ -29,6 +32,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   
   @Input() liveStatusView: boolean = false;
   @ViewChild('mapElement', { static: false }) mapElement!: ElementRef;
+  @ViewChild('popupElement', { static: false }) popupElement!: ElementRef;
 
   map!: Map;
   osmLayer!: TileLayer;
@@ -46,6 +50,13 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   markerSource!: VectorSource;
   markerLayer!: VectorLayer;
 
+  overlay!: Overlay;
+  popupContent: string = '';
+
+  private dronePollingSubscription?: Subscription;
+  private isActive = true;
+  lastUpdateTime = new Date();
+
   private allowEditing: boolean = false;
 
   constructor(private mapDataService: MapDataService, private liveStatusService: LiveStatusService) {}
@@ -54,30 +65,133 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     this.mapDataService.allowRouteEditing$.subscribe(allowEditing => {this.allowEditing = allowEditing});
    }
 
-  ngAfterViewInit(): void {
-
-    // Subscribe to the shared service for waypoint updates.
+   ngAfterViewInit(): void {
     this.initializeMap();
-    if (this.liveStatusView) {
-      this.liveStatusService.getViolations().subscribe(violations => {
-        this.violations = violations;
-        this.updateMapWithViolations(violations);
-        console.log(violations);
-      });
-      this.liveStatusService.getDroneState().subscribe(drone_state => {
-        this.drone_state = drone_state;
-        this.updateMapWithDroneState(drone_state);
-        console.log(drone_state);
-      })
-    }
     
-    else {
-      
-      this.mapDataService.waypoints$.subscribe((waypoints: Waypoint[]) => {
-        this.waypoints = waypoints;
-        this.updateMapWithWaypoints(waypoints);
-      });
+    if (this.liveStatusView) {
+      this.setupLiveStatusView();
+    } else {
+      this.setupRoutePlanningView();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.isActive = false;
+    if (this.dronePollingSubscription) {
+      this.dronePollingSubscription.unsubscribe();
+    }
+  }
+
+  private setupLiveStatusView(): void {
+    // Setup violations display
+    this.liveStatusService.getViolations().subscribe(violations => {
+      this.violations = violations;
+      this.updateMapWithViolations(violations);
+    });
+
+    // Setup drone polling
+    this.startDronePolling();
+
+    // Setup popup interaction
+    this.setupMapHoverInteraction();
+  }
+
+  private setupRoutePlanningView(): void {
+    this.mapDataService.waypoints$.subscribe(waypoints => {
+      this.waypoints = waypoints;
+      this.updateMapWithWaypoints(waypoints);
+    });
+
+    if (this.allowEditing) {
+      this.setupMapClickInteraction();
+    }
+  }
+
+  private startDronePolling(): void {
+    // Initial load
+    this.fetchDroneState();
+    
+    // Start polling every 10 seconds
+    this.dronePollingSubscription = interval(10000)
+      .pipe(takeWhile(() => this.isActive))
+      .subscribe(() => {
+        this.fetchDroneState();
+      });
+  }
+
+  private fetchDroneState(): void {
+    this.liveStatusService.getDroneState().subscribe({
+      next: (drone_state) => {
+        this.drone_state = drone_state;
+        this.lastUpdateTime = new Date();
+        this.updateMapWithDroneState(drone_state);
+      },
+      error: (err) => {
+        console.error('Error fetching drone state:', err);
+      }
+    });
+  }
+
+  private setupMapHoverInteraction(): void {
+    this.map.on('pointermove', evt => {
+      const pixel = this.map.getEventPixel(evt.originalEvent);
+      const feature = this.map.forEachFeatureAtPixel(pixel, f => f, {
+        hitTolerance: 5
+      });
+      
+      if (feature) {
+        const geometry = feature.getGeometry();
+        if (geometry instanceof Point) {
+          const coords = toLonLat(geometry.getCoordinates());
+          
+          const violation: Violation = feature.get('violation');
+          const droneState: DroneState = feature.get('drone_state');
+          
+          if (violation) {
+            const timestamp = new Date(violation.timestamp);
+            this.popupContent = `
+              <strong>Violation</strong><br>
+              <strong>Plate:</strong> ${violation.plate_number} (${violation.plate_state})<br>
+              <strong>Latitude:</strong> ${coords[1].toFixed(6)}<br>
+              <strong>Longitude:</strong> ${coords[0].toFixed(6)}<br>
+              <strong>Date:</strong> ${timestamp.toLocaleDateString()}<br>
+              <strong>Time:</strong> ${timestamp.toLocaleTimeString()}<br>
+            `;
+          } else if (droneState) {
+            this.popupContent = `
+              <strong><u>Drone Location</u></strong><br>
+              <strong>Latitude:</strong> ${coords[1].toFixed(6)}<br>
+              <strong>Longitude:</strong> ${coords[0].toFixed(6)}<br>
+              <strong>Last Update:</strong> ${this.lastUpdateTime.toLocaleTimeString()}
+            `;
+          }
+          
+          this.overlay.setPosition(geometry.getCoordinates());
+          this.popupElement.nativeElement.style.display = 'block';
+          return;
+        }
+      }
+      
+      this.overlay.setPosition(undefined);
+      this.popupElement.nativeElement.style.display = 'none';
+    });
+  }
+
+  private setupMapClickInteraction(): void {
+    this.map.on('click', (event) => {
+      const coordinate = toLonLat(event.coordinate);
+      const newWaypoint: Waypoint = {
+        latitude: coordinate[1],
+        longitude: coordinate[0],
+        waypoint_id: 0,
+        route_id: 0,
+        degrees_from_north: 0
+      };
+      
+      this.waypoints.push(newWaypoint);
+      this.updatePath('red');
+      this.mapDataService.updateWaypoints(this.waypoints);
+    });
   }
 
 
@@ -143,6 +257,15 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         })
       });
       this.map.addLayer(this.markerLayer);
+
+    // // 4) Create overlay for popup
+     this.overlay = new Overlay({
+      element: this.popupElement.nativeElement,
+      autoPan: false,
+      // autoPanAnimation: { duration: 250 }
+    });
+    this.map.addOverlay(this.overlay);
+
     }
 
 
@@ -182,11 +305,6 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
             src: 'upload.png', // Replace with your marker image path.
             scale: 0.05,
           })
-          // For testing purposes, you could use a simple circle style:
-          // image: new CircleStyle({
-          //   radius: 6,
-          //   fill: new Fill({ color: 'blue' })
-          // })
         })
       });
       this.map.addLayer(this.markerLayer);
@@ -214,6 +332,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         this.mapDataService.updateWaypoints(this.waypoints);
         // console.log(this.waypoints)
       });
+      
     }
   }
 
@@ -273,6 +392,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
           scale: 0.05
         })
       }));
+      feature.set('violation', violation);
       this.markerSource.addFeature(feature);
     });
     // Optionally, adjust the view to show all markers.
@@ -285,7 +405,17 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
 
     // Update the marker layer with new waypoints.
     updateMapWithDroneState(drone_state: DroneState): void {
-      // Clear existing markers.
+
+      // Clear only drone features (keep violations)
+      const features = this.markerSource.getFeatures();
+      
+      // Find and remove all existing drone markers
+      const droneFeatures = features.filter(f => {
+        // Check for either the old or new identifier
+        return f.get('isDrone') || f.get('drone_state');
+      });
+      
+      droneFeatures.forEach(f => this.markerSource.removeFeature(f));
       this.pathFeature.setGeometry(undefined);
 
       // Convert from longitude/latitude to the map projection.
@@ -300,6 +430,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
           scale: 0.1
         })
       }));
+      feature.set('drone_state', drone_state);
       this.markerSource.addFeature(feature);
       const extent = this.markerSource.getExtent();
       this.map.getView().fit(extent, { duration: 500, padding: [500, 500, 500, 500] });
@@ -339,31 +470,36 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     console.log(this.waypoints);
   }
 
-    // New method to search for an address using Nominatim.
-    searchAddress(address: string): void {
-      // Construct the URL for the Nominatim API.
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
-      
-      // Fetch the geocoding results.
-      fetch(url)
-        .then(response => response.json())
-        .then(results => {
-          if (results && results.length > 0) {
-            // For this example, take the first result.
-            const result = results[0];
-            const lon = parseFloat(result.lon);
-            const lat = parseFloat(result.lat);
-            const coordinate = fromLonLat([lon, lat]);
-            // Animate the map view to the result.
-            if (this.waypoints.length > 1) {
-              this.map.getView().animate({ center: coordinate, zoom: 16, duration: 1000 });
-            }
-          } else {
-            console.error('No results found for address:', address);
+  // New method to search for an address using Nominatim.
+  searchAddress(address: string): void {
+    // Construct the URL for the Nominatim API.
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+    
+    // Fetch the geocoding results.
+    fetch(url)
+      .then(response => response.json())
+      .then(results => {
+        if (results && results.length > 0) {
+          // For this example, take the first result.
+          const result = results[0];
+          const lon = parseFloat(result.lon);
+          const lat = parseFloat(result.lat);
+          const coordinate = fromLonLat([lon, lat]);
+          // Animate the map view to the result.
+          if (this.waypoints.length > 1) {
+            this.map.getView().animate({ center: coordinate, zoom: 16, duration: 1000 });
           }
-        })
-        .catch(error => {
-          console.error('Error fetching geocoding results:', error);
-        });
-    }
+        } else {
+          console.error('No results found for address:', address);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching geocoding results:', error);
+      });
+  }
+
+  closePopup(event: MouseEvent) {
+    event.preventDefault();
+    this.overlay.setPosition(undefined);
+  }
 }

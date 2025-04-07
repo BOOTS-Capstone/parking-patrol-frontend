@@ -32,7 +32,7 @@ export const routes = [
     WaypointsComponent,
     LiveStatusComponent,
     RoutePlanningComponent,
-    TopBarComponent
+    TopBarComponent,
   ],
   imports: [
     BrowserModule,

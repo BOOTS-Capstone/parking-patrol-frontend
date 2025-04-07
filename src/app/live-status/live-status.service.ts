@@ -10,7 +10,9 @@ import { DroneState } from './drone-state';
 })
 export class LiveStatusService {
 
-  constructor(private httpClient: HttpClient) { }
+  constructor(private httpClient: HttpClient) {
+
+  }
 
   getViolations(): Observable<Violation[]> {
     const url = `${environment.apiURL}/violations`;
