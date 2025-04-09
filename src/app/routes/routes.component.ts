@@ -22,6 +22,7 @@ export class RoutesComponent implements OnInit {
   newRouteName: string = '';
 
   routeEdited: boolean = false;
+  routeCreationView: boolean = false;
 
   constructor(
     private routeService: RouteService,
@@ -30,6 +31,7 @@ export class RoutesComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.routeCreationView = false;
     this.loadRoutes();
     this.mapDataService.allowRouteEditing$.subscribe((edited: boolean) => {
       this.routeEdited = edited;
@@ -64,6 +66,18 @@ export class RoutesComponent implements OnInit {
     this.mapDataService.setRouteBeingEdited(null);
     console.log("Selected route: " + route.name);
     this.getWaypointsOfRoute(route);
+  }
+
+  selectPreviousRoute() {
+    const savedSelectedRouteID = localStorage.getItem("selectedRouteID") ?? -1;
+    if (savedSelectedRouteID != -1) {
+      this.routes.forEach(route => {
+        if (route.route_id == parseInt(savedSelectedRouteID)) {
+          this.selectRoute(route);
+        }
+      })
+    }
+    this.routeCreationView = false;
   }
 
   getWaypointsOfRoute(route: Route): void {
@@ -121,6 +135,15 @@ export class RoutesComponent implements OnInit {
         console.error('Error creating route:', error);
       }
     );
+    this.routeCreationView = false;
+    this.mapDataService.setAllowRouteEditing(false);
+  }
+
+  onCreateRouteClick() {
+    this.routeCreationView = true; 
+    this.selectedRoute = null;
+    this.mapDataService.updateWaypoints([]);
+    this.mapDataService.setAllowRouteEditing(true); 
   }
 
   deleteRoute(route: Route): void {
@@ -153,4 +176,6 @@ export class RoutesComponent implements OnInit {
       }
     );
   }
+
+
 }

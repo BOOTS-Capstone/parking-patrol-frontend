@@ -3,7 +3,7 @@
       <input #addressInput type="text" placeholder="Enter address..." />
       <button (click)="searchAddress(addressInput.value)">Search</button>
   </div>
-  <div class="filter-controls">
+  <div class="filter-controls" *ngIf="liveStatusView">
       <select [(ngModel)]="violationFilter" 
       (change)="onViolationFilterChange()"
       class="violation-filter">

@@ -16,10 +16,16 @@
 
 <div>
     <!-- Input for new route name -->
-    <input type="text" [(ngModel)]="newRouteName" placeholder="Enter new route name" />
-
+    
     <!-- Button to submit the new route -->
-    <button (click)="submitRoute()">Submit Route</button>
+    <button (click)="onCreateRouteClick()">Create Route</button>
+    <button (click)="selectPreviousRoute()" *ngIf="routeCreationView">Cancel</button>
+    
+    <div *ngIf="routeCreationView">
+        <input type="text" [(ngModel)]="newRouteName" placeholder="Enter new route name" />
+        <button (click)="submitRoute()">Submit Route</button>
+    </div>
+
 </div>
 
 <app-waypoints [route]="selectedRoute" [waypoints]="waypoints"></app-waypoints>
