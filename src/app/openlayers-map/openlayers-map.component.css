@@ -3,7 +3,9 @@
     height: 80vh;
     border: 2px solid black;
 } #map.live-status {
-    width: 100%;
+    width: 98%;
+    margin-left: auto;
+    margin-right: auto;
 }
   
 #controls {

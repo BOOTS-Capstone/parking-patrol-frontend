@@ -1,6 +1,20 @@
 <div class="main-content">
     <div class="nav-links">
-        <div class="nav-link" routerLink="/route-planning">Route Planning </div>
-        <div class="nav-link" routerLink="/live-status">Live Status</div>
-    </div>
+        <!-- <div *ngFor="let pageLink in pageLinks"
+            class="nav-link" 
+            routerLink="/route-planning" 
+            (click)="selectLink(pageLink)"> 
+            {{pageLink.value}} 
+        </div> -->
+        <div 
+            class="nav-link" 
+            routerLink="/route-planning" 
+            (click)="selectLink(pageLinks.RoutePlanning)"> 
+            {{pageLinks.RoutePlanning}} 
+        </div>
+        <div 
+            class="nav-link" 
+            routerLink="/live-status" 
+            (click)="pageLinks.LiveStatus"> {{pageLinks.LiveStatus}}</div>
+        </div>
 </div>

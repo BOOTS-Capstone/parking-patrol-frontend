@@ -7,6 +7,7 @@ import { Route } from './route';
 import { Waypoint } from '../waypoint';
 import { MapDataService } from '../map-data.service';
 
+
 @Component({
   selector: 'app-routes',
   standalone: false,
@@ -41,6 +42,14 @@ export class RoutesComponent implements OnInit {
       (data: Route[]) => {
         this.routes = data;
         console.log('Routes loaded:', this.routes);
+        const savedSelectedRouteID = localStorage.getItem("selectedRouteID") ?? -1;
+        if (savedSelectedRouteID != -1) {
+          this.routes.forEach(route => {
+            if (route.route_id == parseInt(savedSelectedRouteID)) {
+              this.selectRoute(route);
+            }
+          })
+        }
       },
       (error) => {
         console.error('Error loading routes:', error);
@@ -50,9 +59,10 @@ export class RoutesComponent implements OnInit {
 
   selectRoute(route: Route) {
     this.selectedRoute = route;
+    localStorage.setItem("selectedRouteID", route.route_id.toString());
     this.editingRoute = null;
     this.mapDataService.setRouteBeingEdited(null);
-    console.log("Selected route: " + route.route_id);
+    console.log("Selected route: " + route.name);
     this.getWaypointsOfRoute(route);
   }
 
@@ -80,7 +90,8 @@ export class RoutesComponent implements OnInit {
     var route: any; //this is Route type
     this.mapDataService.routeBeingEdited$.subscribe(
       routeinfo => {route = routeinfo;
-      console.log('routeinfo ' + JSON.stringify(routeinfo))
+      // console.log('routeinfo ' + JSON.stringify(routeinfo))
+      console.log('selectedRoute: ' + this.selectedRoute?.name);
       this.updateRoute(route);
     })
     // this.mapDataService.setRouteBeingEdited(null);
@@ -131,18 +142,14 @@ export class RoutesComponent implements OnInit {
   }
 
   updateRoute(route: Route): void {
-    const waypoints = this.mapDataService.waypoints$.subscribe(waypoints => {
-      this.waypoints = waypoints;
-    })
-    const newRoute = { name: this.newRouteName, waypoints: this.waypoints };
     this.routeService.updateRoute(route).subscribe(
       response => {
-        console.log('New route created:', response);
+        console.log('Updated route:', response);
         // Optionally, refresh the routes list.
         this.loadRoutes();
       },
       error => {
-        console.error('Error creating route:', error);
+        console.error('Error updating route:', error);
       }
     );
   }
