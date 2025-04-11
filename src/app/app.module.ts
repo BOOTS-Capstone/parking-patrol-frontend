@@ -14,11 +14,13 @@ import { WaypointsComponent } from './waypoints/waypoints.component';
 import { LiveStatusComponent } from './live-status/live-status.component';
 import { RoutePlanningComponent } from './route-planning/route-planning.component';
 import { TopBarComponent } from './top-bar/top-bar.component';
+import { ZonesComponent } from './zones/zones.component';
 
 export const routes = [
   {path: 'live-status', component: LiveStatusComponent},
   {path: 'route-planning', component: RoutePlanningComponent},
   {path: '', component: RoutePlanningComponent},
+  {path: 'zones', component: ZonesComponent},
 
   //it's unhappy with the pathMatch value, idk why
   // {path: '', redirectTo: '/route-planning', pathMatch: "full" },
@@ -33,6 +35,7 @@ export const routes = [
     LiveStatusComponent,
     RoutePlanningComponent,
     TopBarComponent,
+    ZonesComponent,
   ],
   imports: [
     BrowserModule,

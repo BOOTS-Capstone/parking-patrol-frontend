@@ -12,7 +12,8 @@ export class TopBarComponent {
 
   pageLinks = {
     RoutePlanning: "Route Planning",
-    LiveStatus: "Live Status"
+    LiveStatus: "Live Status",
+    Zones: "Zones",
   };
   private selectedLink = this.pageLinks.RoutePlanning;
   public selectLink(linkText: string) {
