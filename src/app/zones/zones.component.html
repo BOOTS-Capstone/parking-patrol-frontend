@@ -1,1 +1,22 @@
-<p>zones works!</p>
+<div class="zones-header"> Created Zones </div>
+
+<div *ngIf="zones && zones.length; else noZones">
+    <div *ngFor="let zone of zones" style="display: grid; justify-content: start; grid-template-columns: auto auto auto; column-gap: 10px; margin: 10px;">
+        <div class="zone-name" [ngClass]="{'selected': selectedZone?.zone_id === zone.zone_id}">
+            {{ zone.name }}
+        </div>
+        <div>
+            <button disabled *ngIf="selectedZone == zone">Edit</button>
+            <button disabled *ngIf="editingZone == zone">Save</button>
+        </div>
+        <div>
+            <button disabled title="Delete Zone">X</button>
+        </div>
+    </div>
+</div>
+
+<!-- <app-waypoints [route]="selectedRoute" [waypoints]="waypoints"></app-waypoints> -->
+  
+<ng-template #noZones>
+    <p>No zones found.</p>
+</ng-template>

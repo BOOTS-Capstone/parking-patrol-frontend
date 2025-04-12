@@ -1,0 +1,16 @@
+.content {
+    margin-bottom: 100px;
+}
+
+.zones-header {
+    font-size: 20pt;
+}
+
+.zone-name {
+    border: 1px solid black;
+    border-radius: 5px;
+    width: fit-content;
+} .zone-name.selected {
+    background-color: gray;
+    cursor: pointer;
+}
