@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { LiveStatusService } from './live-status.service';
+import { MapView } from '../openlayers-map/map-view.enum';
 
 @Component({
   selector: 'app-live-status',
@@ -8,5 +9,6 @@ import { LiveStatusService } from './live-status.service';
   styleUrl: './live-status.component.css'
 })
 export class LiveStatusComponent {
+  MapView = MapView;
   constructor (private liveStatusService: LiveStatusService) {}
 }

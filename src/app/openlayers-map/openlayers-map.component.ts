@@ -20,6 +20,7 @@ import { Violation } from '../violation';
 import { env } from '../../../env';
 import { DroneState } from '../live-status/drone-state';
 import { ViolationFilterType } from '../live-status/live-status.service';
+import { MapView } from './map-view.enum';
 
 @Component({
   selector: 'app-openlayers-map',
@@ -28,7 +29,8 @@ import { ViolationFilterType } from '../live-status/live-status.service';
   styleUrls: ['./openlayers-map.component.css']
 })
 export class OpenlayersMapComponent implements OnInit, AfterViewInit {
-  @Input() liveStatusView: boolean = false;
+  @Input() currentView: MapView = MapView.RoutePlanning;
+  MapView = MapView; 
   @ViewChild('mapElement', { static: false }) mapElement!: ElementRef;
   @ViewChild('popupElement', { static: false }) popupElement!: ElementRef;
 
@@ -73,9 +75,9 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initializeMap();
-    if (this.liveStatusView) {
+    if (this.currentView === MapView.LiveStatus) {
       this.setupLiveStatusView();
-    } else {
+    } else if (this.currentView === MapView.RoutePlanning) {
       this.setupRoutePlanningView();
     }
   }
@@ -202,7 +204,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       visible: true
     });
 
-    if (this.liveStatusView) {
+    if (this.currentView === MapView.LiveStatus) {
       this.map = new Map({
         target: this.mapElement.nativeElement,
         layers: [this.satelliteLayer, this.osmLayer],
@@ -239,7 +241,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         autoPan: false,
       });
       this.map.addOverlay(this.overlay);
-    } else {
+    } else if (this.currentView === MapView.RoutePlanning) {
       this.map = new Map({
         target: this.mapElement.nativeElement,
         layers: [this.satelliteLayer, this.osmLayer],

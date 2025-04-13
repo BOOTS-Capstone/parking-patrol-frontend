@@ -3,7 +3,7 @@
       <input #addressInput type="text" placeholder="Enter address..." />
       <button (click)="searchAddress(addressInput.value)">Search</button>
   </div>
-  <div class="filter-controls" *ngIf="liveStatusView">
+  <div class="filter-controls" *ngIf="currentView == MapView.LiveStatus">
       <select [(ngModel)]="violationFilter" 
       (change)="onViolationFilterChange()"
       class="violation-filter">
@@ -15,8 +15,8 @@
   </div>
 </div>
 <!-- Map container -->
-<div #mapElement id="map" [ngClass]="(liveStatusView ? 'live-status' : '')"></div>
-<div #popupElement id="popup" class="ol-popup" [hidden]="!liveStatusView">
+<div #mapElement id="map" [ngClass]="(currentView == MapView.LiveStatus ? 'live-status' : '')"></div>
+<div #popupElement id="popup" class="ol-popup" [hidden]="currentView == MapView.RoutePlanning">
     <a href="#" id="popup-closer" class="ol-popup-closer" (click)="closePopup($event)"></a>
     <div id="popup-content" [innerHTML]="popupContent"></div>
 </div>
