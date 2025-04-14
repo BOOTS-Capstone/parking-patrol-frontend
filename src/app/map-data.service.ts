@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs';
 import { Waypoint } from './waypoint'; // adjust path as needed
 import { Route } from './routes/route';
+import { Zone } from './zones/zone';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +23,13 @@ export class MapDataService {
     this.waypointsSource.next(waypoints);
     // this.allowRouteEditingSource.next(false);
     // this.routeBeingEditedSource.next(null)
+  }
+
+  private zonesSource = new BehaviorSubject<Zone[]>([]);
+  zones$ = this.zonesSource.asObservable();
+
+  updateZones(zones: Zone[]) {
+    this.zonesSource.next(zones);
   }
 
   private zoneCreatedSource = new Subject<[number, number][]>();

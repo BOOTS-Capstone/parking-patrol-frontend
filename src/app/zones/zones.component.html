@@ -1,16 +1,18 @@
 <div class="zones-header"> Created Zones </div>
 
 <div *ngIf="zones && zones.length; else noZones">
-    <div *ngFor="let zone of zones" style="display: grid; justify-content: start; grid-template-columns: auto auto auto; column-gap: 10px; margin: 10px;">
-        <div class="zone-name" [ngClass]="{'selected': selectedZone?.zone_id === zone.zone_id}">
+    <div *ngFor="let zone of zones" style="display: grid; justify-content: start; grid-template-columns: auto auto auto; column-gap: 10px; margin: 10px">
+        <div (click)="selectZone(zone)" class="zone-name" [ngClass]="{'selected': selectedZone?.id === zone.id}">
             {{ zone.name }}
         </div>
         <div>
-            <button disabled *ngIf="selectedZone == zone">Edit</button>
-            <button disabled *ngIf="editingZone == zone">Save</button>
+            <!-- Edit button currently not in use, ngif false -->
+            <button *ngIf="selectedZone == zone && false">Edit</button>
+
+            <button *ngIf="editingZone == zone">Save</button>
         </div>
         <div>
-            <button disabled title="Delete Zone">X</button>
+            <button title="Delete Zone" (click)="deleteZone(zone)">X</button>
         </div>
     </div>
 </div>

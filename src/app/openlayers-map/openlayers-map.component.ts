@@ -24,6 +24,10 @@ import { ViolationFilterType } from '../live-status/live-status.service';
 import { MapView } from './map-view.enum';
 import { ZoneService } from '../zones/zone.service';
 import { ZonesComponent } from '../zones/zones.component';
+import { Zone } from '../zones/zone';
+
+import Polygon from 'ol/geom/Polygon';
+
 
 @Component({
   selector: 'app-openlayers-map',
@@ -64,6 +68,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     { value: 'all', label: 'Show All Violations' }
   ];
   lastUpdateTime = new Date();
+  showSpecialZones: boolean = false;
   
   // Subscriptions and flags
   private dronePollingSubscription?: Subscription;
@@ -76,6 +81,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   private currentZoneType: 'handicap' | 'fire' = 'fire';
   private drawInteraction!: any;
   private zonesComponent!: ZonesComponent;
+  private zones: Zone[] = [];
 
   constructor(private mapDataService: MapDataService, private liveStatusService: LiveStatusService, private zoneService: ZoneService) {}
 
@@ -120,7 +126,39 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     }
   }
 
+  toggleShowSpecialZones(): void {
+    this.showSpecialZones = !this.showSpecialZones
+    this.showSpecialZones ? console.log("showing special zones") : console.log("hiding special zones");
+    if (this.showSpecialZones) {
+      this.zoneSource = new VectorSource();
+      this.zoneLayer = new VectorLayer({
+        source: this.zoneSource,
+        style: new Style({
+          stroke: new Stroke({
+            color: '#FF0000',
+            width: 2
+          }),
+          fill: new Fill({
+            color: 'rgba(255,0,0,0.2)'
+          })
+        })
+      });
+      this.map.addLayer(this.zoneLayer);
+      this.zoneService.getZones().subscribe(zones => {
+        this.updateMapWithZones(zones);
+      })
+
+      // this.mapDataService.zones$.subscribe(zones => {
+      //   this.updateMapWithZones(zones);
+      // })
+    }
+  }
+
   private setupZonePlanningView(): void {
+    this.zoneService.getZones().subscribe(zones => {
+      this.zones = zones;
+      this.updateMapWithZones(zones);
+    })
     // Initialize zone vector layer
     this.zoneSource = new VectorSource();
     this.zoneLayer = new VectorLayer({
@@ -306,7 +344,8 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         autoPan: false,
       });
       this.map.addOverlay(this.overlay);
-    } else if (this.currentView === MapView.RoutePlanning) {
+    } 
+    else if (this.currentView === MapView.RoutePlanning) {
       this.map = new Map({
         target: this.mapElement.nativeElement,
         layers: [this.satelliteLayer, this.osmLayer],
@@ -352,7 +391,8 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         this.updatePath('red');
         this.mapDataService.updateWaypoints(this.waypoints);
       });
-    } else if (this.currentView === MapView.ZonePlanning) {
+    } 
+    else if (this.currentView === MapView.ZonePlanning) {
       this.map = new Map({
         target: this.mapElement.nativeElement,
         layers: [this.satelliteLayer, this.osmLayer],
@@ -362,6 +402,45 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         })
       });
     }
+  }
+
+  // 2) add the helper method to your component:
+  private updateMapWithZones(zones: Zone[]): void {
+    // clear any old features
+    if (this.zoneSource) {
+      this.zoneSource.clear();
+    }
+
+    zones.forEach(z => {
+      // project each [lon, lat] → [x, y]
+      const coordsProjected = z.coordinates.map(c => fromLonLat(c));
+      // wrap in an array-of-rings for a single polygon
+      const polygon = new Polygon([ coordsProjected ]);
+      const feature = new Feature(polygon);
+
+      // choose colors
+      const isHandicap = z.type === 'handicap';
+      const strokeColor = isHandicap ? 'blue' : '#FF0000';
+      const fillColor   = isHandicap ? 'rgba(0,0,255,0.2)' : 'rgba(255,0,0,0.2)';
+
+      // apply style
+      feature.setStyle(new Style({
+        stroke: new Stroke({ color: strokeColor, width: 2 }),
+        fill:   new Fill({   color: fillColor   })
+      }));
+
+      feature.set('zone', z);
+      this.zoneSource.addFeature(feature);
+    });
+
+    // optionally fit the view to show all zones
+    // if (zones.length) {
+    //   const extent = this.zoneSource.getExtent();
+    //   this.map.getView().fit(extent, {
+    //     duration: 500,
+    //     padding: [50, 50, 50, 50]
+    //   });
+    // }
   }
 
   updatePath(color: string): void {

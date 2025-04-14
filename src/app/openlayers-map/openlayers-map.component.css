@@ -92,3 +92,11 @@
   .violation-filter:hover {
     border-color: #aaa;
   }
+
+  .show-zones-controls {
+    border: 1px solid black;
+    border-radius: 5px;
+    width: fit-content;
+  } .show-zones-controls.show-zones {
+      background-color: gray;
+  }

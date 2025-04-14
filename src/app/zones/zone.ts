@@ -1,5 +1,5 @@
 export interface Zone {
-    zone_id: number;
+    id: number;
     name: string;
     type: 'handicap' | 'fire' ;
     coordinates: [number, number][]; // Array of [lat, lng] pairs
