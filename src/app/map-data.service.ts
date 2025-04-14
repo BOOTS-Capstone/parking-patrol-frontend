@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, ReplaySubject } from 'rxjs';
+import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs';
 import { Waypoint } from './waypoint'; // adjust path as needed
 import { Route } from './routes/route';
 
@@ -22,6 +22,13 @@ export class MapDataService {
     this.waypointsSource.next(waypoints);
     // this.allowRouteEditingSource.next(false);
     // this.routeBeingEditedSource.next(null)
+  }
+
+  private zoneCreatedSource = new Subject<[number, number][]>();
+  zoneCreated$ = this.zoneCreatedSource.asObservable();
+  
+  notifyZoneCreation(coordinates: [number, number][]) {
+    this.zoneCreatedSource.next(coordinates);
   }
 
   // setRouteEdited(route: Route): void {

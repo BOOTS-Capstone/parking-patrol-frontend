@@ -15,6 +15,34 @@
     </div>
 </div>
 
+<div id="zone-dialog" class="dialog" [hidden]="!showDialog">
+  <div class="dialog-content">
+    <h2>{{ editingZone ? 'Edit Zone' : 'New Zone' }}</h2>
+    <form (submit)="submitZone()">
+      <div class="form-group">
+        <label for="zone-name">Zone Name:</label>
+        <input id="zone-name" type="text" [(ngModel)]="zoneName" name="zoneName" required />
+      </div>
+
+      <div class="form-group">
+        <label for="zone-type">Zone Type:</label>
+        <select id="zone-type" [(ngModel)]="zoneType" name="zoneType">
+          <option value="handicap">Handicap</option>
+          <option value="fire">Fire Lane</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div class="dialog-actions">
+          <button type="button" (click)="closeDialog()">Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </div>
+        
+    </form>
+  </div>
+</div>
+
 <!-- <app-waypoints [route]="selectedRoute" [waypoints]="waypoints"></app-waypoints> -->
   
 <ng-template #noZones>

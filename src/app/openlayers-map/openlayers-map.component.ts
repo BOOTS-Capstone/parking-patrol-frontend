@@ -12,7 +12,8 @@ import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import { LineString, Point } from 'ol/geom';
 import Overlay from 'ol/Overlay';
-import { Stroke, Style, Icon } from 'ol/style';
+import { Stroke, Style, Icon, Fill } from 'ol/style';
+import Draw from 'ol/interaction/Draw';
 import { MapDataService } from '../map-data.service';
 import { Waypoint } from '../waypoint';
 import { LiveStatusService } from '../live-status/live-status.service';
@@ -21,6 +22,8 @@ import { env } from '../../../env';
 import { DroneState } from '../live-status/drone-state';
 import { ViolationFilterType } from '../live-status/live-status.service';
 import { MapView } from './map-view.enum';
+import { ZoneService } from '../zones/zone.service';
+import { ZonesComponent } from '../zones/zones.component';
 
 @Component({
   selector: 'app-openlayers-map',
@@ -67,7 +70,14 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   private isActive = true;
   private allowEditing: boolean = false;
 
-  constructor(private mapDataService: MapDataService, private liveStatusService: LiveStatusService) {}
+  // Zone planning variables
+  private zoneSource!: VectorSource;
+  private zoneLayer!: VectorLayer;
+  private currentZoneType: 'handicap' | 'fire' = 'fire';
+  private drawInteraction!: any;
+  private zonesComponent!: ZonesComponent;
+
+  constructor(private mapDataService: MapDataService, private liveStatusService: LiveStatusService, private zoneService: ZoneService) {}
 
   ngOnInit(): void {
     this.mapDataService.allowRouteEditing$.subscribe(allowEditing => {this.allowEditing = allowEditing});
@@ -79,6 +89,8 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       this.setupLiveStatusView();
     } else if (this.currentView === MapView.RoutePlanning) {
       this.setupRoutePlanningView();
+    } else if (this.currentView === MapView.ZonePlanning) {
+      this.setupZonePlanningView();
     }
   }
 
@@ -106,6 +118,59 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     if (this.allowEditing) {
       this.setupMapClickInteraction();
     }
+  }
+
+  private setupZonePlanningView(): void {
+    // Initialize zone vector layer
+    this.zoneSource = new VectorSource();
+    this.zoneLayer = new VectorLayer({
+      source: this.zoneSource,
+      style: new Style({
+        stroke: new Stroke({
+          color: '#FF0000',
+          width: 2
+        }),
+        fill: new Fill({
+          color: 'rgba(255,0,0,0.2)'
+        })
+      })
+    });
+    this.map.addLayer(this.zoneLayer);
+
+    // Add polygon drawing interaction
+    this.drawInteraction = new Draw({
+      source: this.zoneSource,
+      type: 'Polygon',
+      freehand: false
+    });
+    
+    this.map.addInteraction(this.drawInteraction);
+
+    // Handle completed polygons
+    this.drawInteraction.on('drawend', (evt: any) => {
+      const polygon = evt.feature.getGeometry();
+      const coords = polygon.getCoordinates()[0]
+        .map((coord: number[]) => toLonLat(coord));
+      
+      // Remove duplicate closing coordinate
+      coords.pop();
+      
+      // Send to map data service
+      this.mapDataService.notifyZoneCreation(coords);
+      console.log('Zone created:', coords);
+    });
+
+    // Add click handler for existing zones
+    this.map.on('click', (event) => {
+      const feature = this.map.forEachFeatureAtPixel(
+        this.map.getEventPixel(event.originalEvent),
+        f => f
+      );
+      
+      if (feature?.get('zone')) {
+        this.zoneService.selectZone(feature.get('zone'));
+      }
+    });
   }
 
   private startDronePolling(): void {
@@ -286,6 +351,15 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         this.waypoints.push(newWaypoint);
         this.updatePath('red');
         this.mapDataService.updateWaypoints(this.waypoints);
+      });
+    } else if (this.currentView === MapView.ZonePlanning) {
+      this.map = new Map({
+        target: this.mapElement.nativeElement,
+        layers: [this.satelliteLayer, this.osmLayer],
+        view: new View({
+          center: fromLonLat([-96.28172035011501, 30.60139275538404]),
+          zoom: 17
+        })
       });
     }
   }
