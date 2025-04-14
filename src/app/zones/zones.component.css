@@ -1,0 +1,55 @@
+.content {
+    margin-bottom: 100px;
+}
+
+.zones-header {
+    font-size: 20pt;
+}
+
+.zone-name {
+    border: 1px solid black;
+    border-radius: 5px;
+    width: fit-content;
+} .zone-name.selected {
+    background-color: gray;
+    cursor: pointer;
+}
+
+.dialog {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 400px;
+}
+  
+.form-group {
+    margin-bottom: 15px; 
+}
+  
+.form-group label {
+    display: block; 
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+  
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+  
+.dialog-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+  
+.dialog-actions button {
+    padding: 8px 15px;
+    margin-left: 10px;
+}
+  

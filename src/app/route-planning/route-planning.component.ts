@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { MapView } from '../openlayers-map/map-view.enum';
 
 @Component({
   selector: 'app-route-planning',
@@ -7,5 +8,5 @@ import { Component } from '@angular/core';
   styleUrl: './route-planning.component.css'
 })
 export class RoutePlanningComponent {
-
+  MapView = MapView
 }

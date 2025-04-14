@@ -12,7 +12,8 @@ import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
 import { LineString, Point } from 'ol/geom';
 import Overlay from 'ol/Overlay';
-import { Stroke, Style, Icon } from 'ol/style';
+import { Stroke, Style, Icon, Fill } from 'ol/style';
+import Draw from 'ol/interaction/Draw';
 import { MapDataService } from '../map-data.service';
 import { Waypoint } from '../waypoint';
 import { LiveStatusService } from '../live-status/live-status.service';
@@ -20,6 +21,13 @@ import { Violation } from '../violation';
 import { env } from '../../../env';
 import { DroneState } from '../live-status/drone-state';
 import { ViolationFilterType } from '../live-status/live-status.service';
+import { MapView } from './map-view.enum';
+import { ZoneService } from '../zones/zone.service';
+import { ZonesComponent } from '../zones/zones.component';
+import { Zone } from '../zones/zone';
+
+import Polygon from 'ol/geom/Polygon';
+
 
 @Component({
   selector: 'app-openlayers-map',
@@ -28,7 +36,8 @@ import { ViolationFilterType } from '../live-status/live-status.service';
   styleUrls: ['./openlayers-map.component.css']
 })
 export class OpenlayersMapComponent implements OnInit, AfterViewInit {
-  @Input() liveStatusView: boolean = false;
+  @Input() currentView: MapView = MapView.RoutePlanning;
+  MapView = MapView; 
   @ViewChild('mapElement', { static: false }) mapElement!: ElementRef;
   @ViewChild('popupElement', { static: false }) popupElement!: ElementRef;
 
@@ -59,13 +68,22 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     { value: 'all', label: 'Show All Violations' }
   ];
   lastUpdateTime = new Date();
+  showSpecialZones: boolean = false;
   
   // Subscriptions and flags
   private dronePollingSubscription?: Subscription;
   private isActive = true;
   private allowEditing: boolean = false;
 
-  constructor(private mapDataService: MapDataService, private liveStatusService: LiveStatusService) {}
+  // Zone planning variables
+  private zoneSource!: VectorSource;
+  private zoneLayer!: VectorLayer;
+  private currentZoneType: 'handicap' | 'fire' = 'fire';
+  private drawInteraction!: any;
+  private zonesComponent!: ZonesComponent;
+  private zones: Zone[] = [];
+
+  constructor(private mapDataService: MapDataService, private liveStatusService: LiveStatusService, private zoneService: ZoneService) {}
 
   ngOnInit(): void {
     this.mapDataService.allowRouteEditing$.subscribe(allowEditing => {this.allowEditing = allowEditing});
@@ -73,10 +91,12 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initializeMap();
-    if (this.liveStatusView) {
+    if (this.currentView === MapView.LiveStatus) {
       this.setupLiveStatusView();
-    } else {
+    } else if (this.currentView === MapView.RoutePlanning) {
       this.setupRoutePlanningView();
+    } else if (this.currentView === MapView.ZonePlanning) {
+      this.setupZonePlanningView();
     }
   }
 
@@ -104,6 +124,91 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     if (this.allowEditing) {
       this.setupMapClickInteraction();
     }
+  }
+
+  toggleShowSpecialZones(): void {
+    this.showSpecialZones = !this.showSpecialZones
+    this.showSpecialZones ? console.log("showing special zones") : console.log("hiding special zones");
+    if (this.showSpecialZones) {
+      this.zoneSource = new VectorSource();
+      this.zoneLayer = new VectorLayer({
+        source: this.zoneSource,
+        style: new Style({
+          stroke: new Stroke({
+            color: '#FF0000',
+            width: 2
+          }),
+          fill: new Fill({
+            color: 'rgba(255,0,0,0.2)'
+          })
+        })
+      });
+      this.map.addLayer(this.zoneLayer);
+      this.zoneService.getZones().subscribe(zones => {
+        this.updateMapWithZones(zones);
+      })
+
+      // this.mapDataService.zones$.subscribe(zones => {
+      //   this.updateMapWithZones(zones);
+      // })
+    }
+  }
+
+  private setupZonePlanningView(): void {
+    this.zoneService.getZones().subscribe(zones => {
+      this.zones = zones;
+      this.updateMapWithZones(zones);
+    })
+    // Initialize zone vector layer
+    this.zoneSource = new VectorSource();
+    this.zoneLayer = new VectorLayer({
+      source: this.zoneSource,
+      style: new Style({
+        stroke: new Stroke({
+          color: '#FF0000',
+          width: 2
+        }),
+        fill: new Fill({
+          color: 'rgba(255,0,0,0.2)'
+        })
+      })
+    });
+    this.map.addLayer(this.zoneLayer);
+
+    // Add polygon drawing interaction
+    this.drawInteraction = new Draw({
+      source: this.zoneSource,
+      type: 'Polygon',
+      freehand: false
+    });
+    
+    this.map.addInteraction(this.drawInteraction);
+
+    // Handle completed polygons
+    this.drawInteraction.on('drawend', (evt: any) => {
+      const polygon = evt.feature.getGeometry();
+      const coords = polygon.getCoordinates()[0]
+        .map((coord: number[]) => toLonLat(coord));
+      
+      // Remove duplicate closing coordinate
+      coords.pop();
+      
+      // Send to map data service
+      this.mapDataService.notifyZoneCreation(coords);
+      console.log('Zone created:', coords);
+    });
+
+    // Add click handler for existing zones
+    this.map.on('click', (event) => {
+      const feature = this.map.forEachFeatureAtPixel(
+        this.map.getEventPixel(event.originalEvent),
+        f => f
+      );
+      
+      if (feature?.get('zone')) {
+        this.zoneService.selectZone(feature.get('zone'));
+      }
+    });
   }
 
   private startDronePolling(): void {
@@ -202,7 +307,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       visible: true
     });
 
-    if (this.liveStatusView) {
+    if (this.currentView === MapView.LiveStatus) {
       this.map = new Map({
         target: this.mapElement.nativeElement,
         layers: [this.satelliteLayer, this.osmLayer],
@@ -239,7 +344,8 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         autoPan: false,
       });
       this.map.addOverlay(this.overlay);
-    } else {
+    } 
+    else if (this.currentView === MapView.RoutePlanning) {
       this.map = new Map({
         target: this.mapElement.nativeElement,
         layers: [this.satelliteLayer, this.osmLayer],
@@ -285,7 +391,56 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
         this.updatePath('red');
         this.mapDataService.updateWaypoints(this.waypoints);
       });
+    } 
+    else if (this.currentView === MapView.ZonePlanning) {
+      this.map = new Map({
+        target: this.mapElement.nativeElement,
+        layers: [this.satelliteLayer, this.osmLayer],
+        view: new View({
+          center: fromLonLat([-96.28172035011501, 30.60139275538404]),
+          zoom: 17
+        })
+      });
     }
+  }
+
+  // 2) add the helper method to your component:
+  private updateMapWithZones(zones: Zone[]): void {
+    // clear any old features
+    if (this.zoneSource) {
+      this.zoneSource.clear();
+    }
+
+    zones.forEach(z => {
+      // project each [lon, lat] → [x, y]
+      const coordsProjected = z.coordinates.map(c => fromLonLat(c));
+      // wrap in an array-of-rings for a single polygon
+      const polygon = new Polygon([ coordsProjected ]);
+      const feature = new Feature(polygon);
+
+      // choose colors
+      const isHandicap = z.type === 'handicap';
+      const strokeColor = isHandicap ? 'blue' : '#FF0000';
+      const fillColor   = isHandicap ? 'rgba(0,0,255,0.2)' : 'rgba(255,0,0,0.2)';
+
+      // apply style
+      feature.setStyle(new Style({
+        stroke: new Stroke({ color: strokeColor, width: 2 }),
+        fill:   new Fill({   color: fillColor   })
+      }));
+
+      feature.set('zone', z);
+      this.zoneSource.addFeature(feature);
+    });
+
+    // optionally fit the view to show all zones
+    // if (zones.length) {
+    //   const extent = this.zoneSource.getExtent();
+    //   this.map.getView().fit(extent, {
+    //     duration: 500,
+    //     padding: [50, 50, 50, 50]
+    //   });
+    // }
   }
 
   updatePath(color: string): void {

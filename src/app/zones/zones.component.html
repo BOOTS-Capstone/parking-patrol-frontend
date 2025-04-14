@@ -1,0 +1,52 @@
+<div class="zones-header"> Created Zones </div>
+
+<div *ngIf="zones && zones.length; else noZones">
+    <div *ngFor="let zone of zones" style="display: grid; justify-content: start; grid-template-columns: auto auto auto; column-gap: 10px; margin: 10px">
+        <div (click)="selectZone(zone)" class="zone-name" [ngClass]="{'selected': selectedZone?.id === zone.id}">
+            {{ zone.name }}
+        </div>
+        <div>
+            <!-- Edit button currently not in use, ngif false -->
+            <button *ngIf="selectedZone == zone && false">Edit</button>
+
+            <button *ngIf="editingZone == zone">Save</button>
+        </div>
+        <div>
+            <button title="Delete Zone" (click)="deleteZone(zone)">X</button>
+        </div>
+    </div>
+</div>
+
+<div id="zone-dialog" class="dialog" [hidden]="!showDialog">
+  <div class="dialog-content">
+    <h2>{{ editingZone ? 'Edit Zone' : 'New Zone' }}</h2>
+    <form (submit)="submitZone()">
+      <div class="form-group">
+        <label for="zone-name">Zone Name:</label>
+        <input id="zone-name" type="text" [(ngModel)]="zoneName" name="zoneName" required />
+      </div>
+
+      <div class="form-group">
+        <label for="zone-type">Zone Type:</label>
+        <select id="zone-type" [(ngModel)]="zoneType" name="zoneType">
+          <option value="handicap">Handicap</option>
+          <option value="fire">Fire Lane</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div class="dialog-actions">
+          <button type="button" (click)="closeDialog()">Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </div>
+        
+    </form>
+  </div>
+</div>
+
+<!-- <app-waypoints [route]="selectedRoute" [waypoints]="waypoints"></app-waypoints> -->
+  
+<ng-template #noZones>
+    <p>No zones found.</p>
+</ng-template>

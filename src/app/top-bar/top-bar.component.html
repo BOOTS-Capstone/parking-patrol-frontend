@@ -1,20 +1,12 @@
 <div class="main-content">
     <div class="nav-links">
-        <!-- <div *ngFor="let pageLink in pageLinks"
+        <div *ngFor="let page of pages | keyvalue: doNotSort"
             class="nav-link" 
-            routerLink="/route-planning" 
-            (click)="selectLink(pageLink)"> 
-            {{pageLink.value}} 
-        </div> -->
-        <div 
-            class="nav-link" 
-            routerLink="/route-planning" 
-            (click)="selectLink(pageLinks.RoutePlanning)"> 
-            {{pageLinks.RoutePlanning}} 
+            routerLink="{{ page.value.pageLink }}" 
+            (click)="selectLink(page.value.pageTitle)"
+            [ngClass]="(selectedLink == page.value.pageTitle ? 'selected' : '')"> 
+            {{page.value.pageTitle}} 
         </div>
-        <div 
-            class="nav-link" 
-            routerLink="/live-status" 
-            (click)="pageLinks.LiveStatus"> {{pageLinks.LiveStatus}}</div>
-        </div>
+    </div>
 </div>
+
