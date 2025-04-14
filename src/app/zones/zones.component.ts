@@ -36,7 +36,7 @@ export class ZonesComponent {
 
   ngOnInit(): void {
     this.zoneCreationView = false;
-    // this.loadZones();
+    this.loadZones();
     this.mapDataService.zoneCreated$.subscribe((coords:[number, number][]) => {
       this.openDialog(coords);
       // this.zoneEdited = ;
@@ -90,11 +90,11 @@ export class ZonesComponent {
     this.editingZone = null;
   }
 
-  // loadZones(): void {
-  //   this.zoneService.getZones().subscribe(
-  //     (data: Zone[]) => {
-  //       this.zones = data;
-  //       console.log('Zones loaded:', this.zones);
+  loadZones(): void {
+    this.zoneService.getZones().subscribe(
+      (data: Zone[]) => {
+        this.zones = data;
+        console.log('Zones loaded:', this.zones);
   //       const savedSelectedZoneID = localStorage.getItem("selectedZoneID") ?? -1;
   //       if (savedSelectedZoneID != -1) {
   //         this.zones.forEach(zone => {
@@ -103,11 +103,11 @@ export class ZonesComponent {
   //           }
   //         })
   //       }
-  //     },
-  //     (error) => {
-  //       console.error('Error loading zones:', error);
-  //     }
-  //   );
-  // }
+      },
+      (error) => {
+        console.error('Error loading zones:', error);
+      }
+    );
+  }
 
 }

@@ -26,6 +26,13 @@ export class ZoneService {
     // TODO: Implement zone selection logic
   }
 
+  getZones(): Observable<Zone[]> {
+    console.log("Fetching zones from server...");
+    return this.http.get<Zone[]>(`${environment.apiURL}/getZones`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   private createGeoJsonFeature(zone: Zone): any {
     // Ensure polygon is closed (first/last points match)
     const coordinates = this.ensureClosedPolygon(zone.coordinates);
