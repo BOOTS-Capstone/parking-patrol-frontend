@@ -68,6 +68,17 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "deploy": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.deploy.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "development"
@@ -80,6 +91,9 @@
             },
             "development": {
               "buildTarget": "parking-patrol-frontend:build:development"
+            },
+            "deploy": {
+              "buildTarget": "parking-patrol-frontend:build:deploy"
             }
           },
           "defaultConfiguration": "development"

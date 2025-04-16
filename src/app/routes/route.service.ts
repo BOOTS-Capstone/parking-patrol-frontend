@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Route } from './route';
 import { Waypoint } from '../waypoint';
@@ -15,7 +15,15 @@ export class RouteService {
   constructor(private http: HttpClient, private mapDataService: MapDataService) {}
 
   getRoutes(): Observable<Route[]> {
-    return this.http.get<Route[]>(`${environment.apiURL}/getRoutes`);
+    // return this.http.get<Route[]>(`${environment.apiURL}/getRoutes`);
+    const headers = new HttpHeaders({
+      'ngrok-skip-browser-warning': 'true',
+    });
+
+    return this.http.get<Route[]>(
+      `${environment.apiURL}/getRoutes`,
+      { headers }
+    );
   }
 
   createRoute(newRoute: { name: string, waypoints: Waypoint[] }): Observable<any> {

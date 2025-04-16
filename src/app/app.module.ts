@@ -7,7 +7,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { OpenlayersMapComponent } from './openlayers-map/openlayers-map.component';
 import { RoutesComponent } from './routes/routes.component';
 import { WaypointsComponent } from './waypoints/waypoints.component';
@@ -16,6 +16,9 @@ import { RoutePlanningComponent } from './route-planning/route-planning.componen
 import { TopBarComponent } from './top-bar/top-bar.component';
 import { ZonesComponent } from './zones/zones.component';
 import { ZonePlanningComponent } from './zone-planning/zone-planning.component';
+import { NgrokInterceptor } from './ngrok.interceptor';
+
+import { environment } from '../environments/environment';
 
 export const routes = [
   {path: 'live-status', component: LiveStatusComponent},
@@ -50,7 +53,15 @@ export const routes = [
   exports: [
     RouterModule
   ],
-  providers: [],
+  providers: [
+    (environment.useNgrokInterceptor
+      ? [{
+          provide: HTTP_INTERCEPTORS,
+          useClass: NgrokInterceptor,
+          multi: true
+        }]
+      : [])
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

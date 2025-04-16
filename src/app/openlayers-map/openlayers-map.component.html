@@ -4,6 +4,7 @@
       <button (click)="searchAddress(addressInput.value)">Search</button>
   </div>
   <div class="show-zones-controls" 
+    *ngIf="currentView == MapView.RoutePlanning"
     [ngClass]="showSpecialZones ? 'show-zones': ''"
     (click)="toggleShowSpecialZones()"
     >

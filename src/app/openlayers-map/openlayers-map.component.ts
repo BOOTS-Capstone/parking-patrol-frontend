@@ -27,6 +27,7 @@ import { ZonesComponent } from '../zones/zones.component';
 import { Zone } from '../zones/zone';
 
 import Polygon from 'ol/geom/Polygon';
+import { environment } from '../../environments/environment';
 
 
 @Component({
@@ -147,10 +148,9 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       this.zoneService.getZones().subscribe(zones => {
         this.updateMapWithZones(zones);
       })
-
-      // this.mapDataService.zones$.subscribe(zones => {
-      //   this.updateMapWithZones(zones);
-      // })
+    }
+    else {
+      this.zoneSource.clear();
     }
   }
 
@@ -295,14 +295,16 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       visible: false
     });
 
-    var maptilerKey = env.maptilerAPIKey;
+    var mapURL;
+    if (environment.useMaptilerMap) {
+        mapURL = environment.mapURL + env.maptilerAPIKey
+    } else {
+      mapURL = environment.mapURL
+    }
     this.satelliteLayer = new TileLayer({
       source: new XYZ({
-        //maptiler URL (requires API key)
-        // url: 'https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=' + maptilerKey
-
         //free map
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        url: mapURL
       }),
       visible: true
     });
