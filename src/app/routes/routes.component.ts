@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable,take, combineLatest } from 'rxjs';
 
 import { RouteService } from './route.service';
-import { WaypointService } from '../waypoint.service';
+import { WaypointService } from '../waypoints/waypoint.service';
 import { Route } from './route';
-import { Waypoint } from '../waypoint';
+import { Waypoint } from '../waypoints/waypoint';
 import { MapDataService } from '../map-data.service';
+import { textHeights } from 'ol/render/canvas';
 
 
 @Component({
@@ -18,16 +19,18 @@ export class RoutesComponent implements OnInit {
   routes: Route[] = [];
   waypoints: Waypoint[] = [];
   selectedRoute: Route | null = null;
-  editingRoute: Route | null = null;
   newRouteName: string = '';
 
   routeEdited: boolean = false;
   routeCreationView: boolean = false;
 
+  //used when editing waypoints to restore old info when the user clicks cancel
+  private _waypointsSnapshot: Waypoint[] = [];
+
   constructor(
     private routeService: RouteService,
     private waypointService: WaypointService,
-    private mapDataService: MapDataService  // Inject the shared service
+    public mapDataService: MapDataService  // Inject the shared service
   ) { }
 
   ngOnInit(): void {
@@ -36,6 +39,9 @@ export class RoutesComponent implements OnInit {
     this.mapDataService.allowRouteEditing$.subscribe((edited: boolean) => {
       this.routeEdited = edited;
       console.log('Route edited:', edited);
+    });
+    this.mapDataService.waypoints$.subscribe(waypoints => {
+      this.waypoints = waypoints;
     });
   }
 
@@ -60,12 +66,20 @@ export class RoutesComponent implements OnInit {
   }
 
   selectRoute(route: Route) {
+    this.cancelEdit();
     this.selectedRoute = route;
     localStorage.setItem("selectedRouteID", route.route_id.toString());
-    this.editingRoute = null;
     this.mapDataService.setRouteBeingEdited(null);
+    this.mapDataService.setAllowRouteEditing(false);
     console.log("Selected route: " + route.name);
-    this.getWaypointsOfRoute(route);
+
+    //update waypoints in the shares service
+    this.getWaypointsOfRoute(route)
+  }
+
+  getWaypointsOfRoute(route: Route): void {
+    this.waypointService.getWaypoints(route.route_id)
+      .subscribe(waypoints => this.mapDataService.updateWaypoints(waypoints));
   }
 
   selectPreviousRoute() {
@@ -80,56 +94,65 @@ export class RoutesComponent implements OnInit {
     this.routeCreationView = false;
   }
 
-  getWaypointsOfRoute(route: Route): void {
-    this.waypointService.getWaypoints(route.route_id).subscribe(waypoints => {
-      this.waypoints = waypoints;
-      console.log(waypoints);
-      // Update the shared map data service with the new waypoints.
-      this.mapDataService.updateWaypoints(waypoints);
-    });
-  }
 
   editRoute(route: Route): void {
-    // Clone the selected route so we don't modify the original before saving
-    this.editingRoute = route;
-    this.mapDataService.setRouteBeingEdited(this.editingRoute);
+    this._waypointsSnapshot = this.waypoints.map(wp => ({ ...wp }));
+    this.mapDataService.setRouteBeingEdited(route);
+    this.mapDataService.setAllowRouteEditing(true);
+  }
+
+  bleh() {
+    console.log(this.waypoints)
+    this.mapDataService.updateWaypoints(this.waypoints)
   }
 
   cancelEdit(): void {
-    this.editingRoute = null; // Exit editing mode without saving
+    this.mapDataService.updateWaypoints(this._waypointsSnapshot);
+    this._waypointsSnapshot = [];
+    this.mapDataService.setRouteBeingEdited(null);
+    this.mapDataService.setAllowRouteEditing(false);
   }
 
   saveRoute(): void {
-    if (!this.editingRoute) return;
-    var route: any; //this is Route type
-    this.mapDataService.routeBeingEdited$.subscribe(
-      routeinfo => {route = routeinfo;
-      // console.log('routeinfo ' + JSON.stringify(routeinfo))
-      console.log('selectedRoute: ' + this.selectedRoute?.name);
-      this.updateRoute(route);
-    })
-    // this.mapDataService.setRouteBeingEdited(null);
-    // console.log(route);
-    // this.mapDataService.setRouteBeingEdited(null);
-    // Send the updated route to the backend
+    this.mapDataService.routeBeingEdited$
+      .pipe(take(1))
+      .subscribe(route => {
+        if (!route) { return; }
+
+        this.routeService.updateRoute(route).subscribe(
+          _ => {
+            this.loadRoutes();
+            this.cancelEdit();
+          },
+          err => console.error('Error updating route', err)
+        );
+      });
   }
 
 
   // Sends the new route and its waypoints to the createRoute endpoint.
   submitRoute(): void {
-    // if (!this.newRouteName.trim() || this.waypoints.length === 0) {
-    //   alert('Please enter a route name and add some waypoints on the map.');
-    //   return;
-    // }
-    const waypoints = this.mapDataService.waypoints$.subscribe(waypoints => {
-      this.waypoints = waypoints;
-    })
-    const newRoute = { name: this.newRouteName, waypoints: this.waypoints };
+    if (!this.newRouteName.trim() || this.waypoints.length === 0) {
+      alert('Please enter a route name and at add least two waypoints to the new route');
+      return;
+    }
+    else if (!this.newRouteName.trim()) {
+       alert('Please enter a name for the new route');
+       return;
+    }
+    else if (this.waypoints.length === 0) {
+      alert(`Please add at least two waypoints to the new route`);
+    }
+
+    const waypoints = this.mapDataService.currentWaypoints;
+    const newRoute = { name: this.newRouteName, waypoints: waypoints };
     this.routeService.createRoute(newRoute).subscribe(
       response => {
         console.log('New route created:', response);
         // Optionally, refresh the routes list.
         this.loadRoutes();
+        this.routeCreationView = false;
+        this.mapDataService.setAllowRouteEditing(false);
       },
       error => {
         console.error('Error creating route:', error);
@@ -162,6 +185,12 @@ export class RoutesComponent implements OnInit {
         error => console.error('Error deleting route:', error)
       );
     }
+  }
+
+  removeWaypoint(index: number) {
+    const updated = this.waypoints.slice(); 
+    updated.splice(index, 1);
+    this.mapDataService.updateWaypoints(updated);
   }
 
   updateRoute(route: Route): void {

@@ -1,13 +1,17 @@
-<div class="content">
+<!-- <div> NO LONGER IN USE </div> -->
+
+
+
+<!-- <div class="content">
     <div class="route-name">
         {{route?.name}}
     </div>
     <div class="waypoints-list">
-        <!-- Header row -->
+        
         <div><strong>Latitude</strong></div>
         <div><strong>Longitude</strong></div>
         <div><strong>Offset</strong></div>
-        <!-- Data rows -->
+        
         <ng-container class="waypoints-list" *ngIf="waypoints.length > 0; else noWaypoints" >
             <ng-container *ngFor="let waypoint of waypoints; let i = index">
                 <input style="width: 100px; overflow-x: scroll;" value="{{ waypoint.latitude }}" [disabled]="!(mapDataService.routeBeingEdited$ | async)" >
@@ -15,7 +19,7 @@
                 <input 
                 id="heading-{{i}}" 
                 type="number" 
-                [disabled]="!allowEditing"
+                [disabled]="!allowEditing && !routeCreationView"
                 [(ngModel)]="waypoint.degrees_from_north"
                 [disabled]="!(mapDataService.routeBeingEdited$ | async)"
                 (ngModelChange)="mapDataService.updateWaypoints(this.waypoints)"
@@ -29,4 +33,5 @@
 
 <ng-template #noWaypoints>
     <div style="width: 100px;"> No waypoints for selected route </div>
-</ng-template>
+</ng-template> -->
+

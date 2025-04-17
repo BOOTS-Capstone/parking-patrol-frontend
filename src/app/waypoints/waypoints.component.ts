@@ -1,5 +1,5 @@
-import { Component, Input } from '@angular/core';
-import { Waypoint } from '../waypoint';
+import { Component, Input, OnInit } from '@angular/core';
+import { Waypoint } from './waypoint';
 import { Route } from '../routes/route';
 import { MapDataService } from '../map-data.service';
 
@@ -9,15 +9,23 @@ import { MapDataService } from '../map-data.service';
   templateUrl: './waypoints.component.html',
   styleUrl: './waypoints.component.css'
 })
+//NO LONGER IN USE
 export class WaypointsComponent {
-  @Input() route: Route | null = null;
-  @Input() waypoints: Waypoint[] = [];
+  // @Input() route: Route | null = null;
+  // waypoints: Waypoint[] = [];
+  // @Input() routeCreationView: boolean = false;
 
-  allowEditing: boolean = false;
+  // allowEditing: boolean = false;
 
-  printWaypoint(wp: Waypoint) {
-    console.log('waypoint: ' + JSON.stringify(wp));
-  }
+  // printWaypoint(wp: Waypoint) {
+  //   console.log('waypoint: ' + JSON.stringify(wp));
+  // }
 
-  constructor(public mapDataService: MapDataService) {}
+  // constructor(public mapDataService: MapDataService) {}
+
+  // ngOnInit(): void {
+  //   this.mapDataService.waypoints$.subscribe(waypoints => {
+  //     this.waypoints = waypoints;
+  //   })
+  // }
 }

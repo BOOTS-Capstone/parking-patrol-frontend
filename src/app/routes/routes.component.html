@@ -1,12 +1,13 @@
 <div class="routes-header"> Created Routes </div>
-<div *ngIf="routes && routes.length; else noRoutes">
+<div *ngIf="routes && routes.length && !routeCreationView; else noRoutes">
     <div *ngFor="let route of routes" style="display: grid; justify-content: start; grid-template-columns: auto auto auto; column-gap: 10px; margin: 10px;">
         <div class="route-name" (click)="selectRoute(route)" [ngClass]="{'selected': selectedRoute?.route_id === route.route_id}">
             {{ route.name }}
         </div>
         <div>
             <button (click)="editRoute(route)" *ngIf="selectedRoute == route">Edit</button>
-            <button (click)="saveRoute()" *ngIf="editingRoute == route">Save</button>
+            <button (click)="cancelEdit()" *ngIf="(mapDataService.routeBeingEdited$ | async) == route">Cancel</button>
+            <button (click)="saveRoute()" *ngIf="(mapDataService.routeBeingEdited$ | async) == route">Save</button>
         </div>
         <div>
             <button (click)="deleteRoute(route)" title="Delete Route">X</button>
@@ -18,7 +19,7 @@
     <!-- Input for new route name -->
     
     <!-- Button to submit the new route -->
-    <button (click)="onCreateRouteClick()">Create Route</button>
+    <button (click)="onCreateRouteClick()" *ngIf="(mapDataService.routeBeingEdited$ | async) == null">Create Route</button>
     <button (click)="selectPreviousRoute()" *ngIf="routeCreationView">Cancel</button>
     
     <div *ngIf="routeCreationView">
@@ -28,7 +29,47 @@
 
 </div>
 
-<app-waypoints [route]="selectedRoute" [waypoints]="waypoints"></app-waypoints>
+<div class="waypoints">
+    <div class="route-name-waypoints">
+        Waypoints for route: <b>{{selectedRoute?.name}}</b>
+    </div>
+    <div class="waypoints-list">
+        <!-- Header row -->
+        <div>Latitude</div>
+        <div>Longitude</div>
+        <div>Offset</div>
+        <div></div>
+        <!-- Data rows -->
+        <ng-container class="waypoints-list" *ngIf="waypoints.length > 0; else noWaypoints" >
+            <ng-container *ngFor="let waypoint of waypoints; let i = index">
+                <input style="width: 100px; overflow-x: scroll;" value="{{ waypoint.latitude }}" [disabled]="!(mapDataService.routeBeingEdited$ | async)" >
+                <input style="width: 100px; overflow-x: hidden;" value="{{ waypoint.longitude }}" [disabled]="!(mapDataService.routeBeingEdited$ | async)">
+                <input 
+                id="heading-{{i}}" 
+                type="number" 
+                [disabled]="!mapDataService.allowRouteEditing"
+                [(ngModel)]="waypoint.degrees_from_north"
+                (ngModelChange)="bleh()"
+                placeholder="Enter heading" 
+                min="0" max="360"
+                >
+                <div>
+                    <button
+                      (click)="removeWaypoint(i)"
+                      [disabled]="!(mapDataService.allowRouteEditing$ | async)"
+                      title="Remove this waypoint"
+                    >
+                      X
+                    </button>
+                  </div>
+            </ng-container>
+        </ng-container>
+    </div>
+</div>
+
+<ng-template #noWaypoints>
+    <div style="width: 100px;"> No waypoints for selected route </div>
+</ng-template>
   
 <ng-template #noRoutes>
     <p>No routes available.</p>

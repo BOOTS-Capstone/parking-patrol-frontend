@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Route } from './route';
-import { Waypoint } from '../waypoint';
+import { Waypoint } from '../waypoints/waypoint';
 import { MapDataService } from '../map-data.service';
 import { environment } from '../../environments/environment';
 
@@ -10,7 +10,6 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class RouteService {
-  private updatedWaypoints: Waypoint[] = [];
 
   constructor(private http: HttpClient, private mapDataService: MapDataService) {}
 
@@ -35,10 +34,8 @@ export class RouteService {
   }
 
   updateRoute(route: Route): Observable<any> {
-    this.mapDataService.waypoints$.subscribe(waypoints => {
-      this.updatedWaypoints = waypoints;
-    })
-    var updatedRoute = {route_id: route.route_id, name: route.name, waypoints: this.updatedWaypoints};
+    const waypoints = this.mapDataService.currentWaypoints;
+    var updatedRoute = {route_id: route.route_id, name: route.name, waypoints: waypoints};
     return this.http.post(`${environment.apiURL}/updateRoute`, updatedRoute)
   }
 }

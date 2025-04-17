@@ -15,7 +15,7 @@ import Overlay from 'ol/Overlay';
 import { Stroke, Style, Icon, Fill } from 'ol/style';
 import Draw from 'ol/interaction/Draw';
 import { MapDataService } from '../map-data.service';
-import { Waypoint } from '../waypoint';
+import { Waypoint } from '../waypoints/waypoint';
 import { LiveStatusService } from '../live-status/live-status.service';
 import { Violation } from '../violation';
 import { env } from '../../../env';

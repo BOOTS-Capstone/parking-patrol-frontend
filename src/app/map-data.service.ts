@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs';
-import { Waypoint } from './waypoint'; // adjust path as needed
+import { Waypoint } from './waypoints/waypoint'; // adjust path as needed
 import { Route } from './routes/route';
 import { Zone } from './zones/zone';
 
@@ -21,8 +21,20 @@ export class MapDataService {
 
   updateWaypoints(waypoints: Waypoint[]): void {
     this.waypointsSource.next(waypoints);
+    console.log("Got updated waypoints: ");
+    this.waypointsSource.forEach(waypoint => {
+      console.log(waypoint)
+    })
     // this.allowRouteEditingSource.next(false);
     // this.routeBeingEditedSource.next(null)
+  }
+
+  get currentWaypoints(): Waypoint[] {
+    return this.waypointsSource.getValue();
+  }
+
+  get allowRouteEditing(): boolean {
+    return this.allowRouteEditingSource.getValue();
   }
 
   private zonesSource = new BehaviorSubject<Zone[]>([]);
@@ -45,19 +57,11 @@ export class MapDataService {
 
   /**
    * Sets the current route being edited. 
-   * Also sets allowRouteEditing$ to true if route is not null.
-   * If route is null, sets allowRouteEditing$ to false
    * @param route 
    */
   setRouteBeingEdited(route: Route | null) {
     // this.allowRouteEditingSource.next(allowRouteEditing);
     this.routeBeingEditedSource.next(route);
-    if (route === null) {
-      this.allowRouteEditingSource.next(false);
-    } 
-    else {
-      this.allowRouteEditingSource.next(true);
-    }
     console.log('Updated route being edited to: ' + JSON.stringify(route));
   }
 
