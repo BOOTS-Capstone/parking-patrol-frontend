@@ -22,15 +22,16 @@ export class ZoneService {
     );
   }
 
-  selectZone(zone: any): void {
-    // TODO: Implement zone selection logic
-  }
 
   getZones(): Observable<Zone[]> {
     console.log("Fetching zones from server...");
     return this.http.get<Zone[]>(`${environment.apiURL}/getZones`).pipe(
       catchError(this.handleError)
     );
+  }
+
+  deleteZone(zone: Zone): Observable<void> {
+    return this.http.delete<void>(`${environment.apiURL}/zones/${zone.id}`);
   }
 
   private createGeoJsonFeature(zone: Zone): any {

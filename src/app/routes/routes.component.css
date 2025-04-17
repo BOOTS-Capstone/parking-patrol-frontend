@@ -27,7 +27,7 @@
     display: flex;
     flex: 0 0 auto;
     flex-direction: column;
-    row-gap: .3rem;
+    row-gap: .2rem;
     max-height: 30vh;
     /* max-width: 19vw; */
     overflow-y: scroll;
@@ -46,7 +46,8 @@
   /* Each route row */
   .route-row {
     display: grid;
-    grid-template-columns: auto .2fr .2fr;
+    grid-template-columns: 1fr auto auto;
+
     /* max-width: 10vw; */
     align-items: center;
     /* width: fit-content; */
@@ -59,6 +60,13 @@
     cursor: pointer;
     font-size: .85rem;
 
+    display: grid;
+    /* 1fr for the name (fills all leftover space),
+       auto for any middle buttons,
+       auto for the delete‑X at the very end */
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+
   }
   .route-row:hover {
     background: #fafafa;
@@ -69,8 +77,10 @@
   
   /* Route name cell */
   .route-row .route-name {
-    padding: 0.05rem 0.05rem;
+    padding: 0.05rem;
     transition: background 0.2s;
+    display: flex;
+    align-items: center;
   }
 
   .route-name {
@@ -89,8 +99,14 @@
   }
   .route-row button:hover:not(:disabled) {
     opacity: 1;
+    transform: scale(1.1);
   }
   
+  .route-row button[title="Edit Route"] {
+    display: flex;
+    align-items: center;
+    color: rgb(17, 0, 255);
+  }
   /* Delete “X” */
   .route-row button[title="Delete Route"] {
     color: #e53935;

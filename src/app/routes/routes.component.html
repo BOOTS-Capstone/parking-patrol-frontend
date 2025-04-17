@@ -10,7 +10,7 @@
                     {{ route.name }}
                 </div>
                 <div>
-                    <button (click)="editRoute(route)" *ngIf="selectedRoute == route">Edit</button>
+                    <button (click)="editRoute(route)" title="Edit Route" *ngIf="selectedRoute == route">Edit</button>
                 </div>
                 <div>
                     <button (click)="deleteRoute(route)" title="Delete Route">X</button>

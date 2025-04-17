@@ -155,8 +155,10 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
   }
 
   private setupZonePlanningView(): void {
-    this.zoneService.getZones().subscribe(zones => {
+    this.mapDataService.zones$.subscribe(zones => {
       this.zones = zones;
+      console.log('Got zones: ');
+      console.log(zones);
       this.updateMapWithZones(zones);
     })
     // Initialize zone vector layer
@@ -198,18 +200,49 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       console.log('Zone created:', coords);
     });
 
-    // Add click handler for existing zones
-    this.map.on('click', (event) => {
-      const feature = this.map.forEachFeatureAtPixel(
-        this.map.getEventPixel(event.originalEvent),
-        f => f
-      );
-      
-      if (feature?.get('zone')) {
-        this.zoneService.selectZone(feature.get('zone'));
-      }
+
+    this.overlay = new Overlay({
+      element: this.popupElement.nativeElement,
+      autoPan: true,
     });
-  }
+    this.map.addOverlay(this.overlay);
+    
+    // 2) subscribe to zone selections:
+    this.mapDataService.selectedZone$.subscribe(zone => {
+      if (!zone) {
+        this.overlay.setPosition(undefined);
+        return;
+      }
+    
+      // find the feature added in updateMapWithZones
+      const feature = this.zoneSource
+        .getFeatures()
+        .find(f => (f.get('zone') as Zone).id === zone.id);
+    
+      if (feature) {
+        const extent = (feature.getGeometry() as Polygon).getExtent();
+        const view = this.map.getView();
+        view.fit(extent, {
+          padding: [40, 40, 40, 40],
+          duration: 500,
+          minResolution: .25
+        });
+    
+        // show a popup at its center
+        const center: [number, number] = [
+          (extent[0] + extent[2]) / 2,
+          (extent[1] + extent[3]) / 2,
+        ];
+        this.popupContent = `
+          <div style="padding:4px 8px; background:white; border:1px solid #333; border-radius:4px;">
+            <strong>${zone.name}</strong><br>
+            Type: ${zone.type}
+          </div>
+        `;
+        this.overlay.setPosition(center);
+      }
+  });
+}
 
   private startDronePolling(): void {
     this.fetchDroneState();
@@ -568,7 +601,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     this.updatePath('red');
     if (waypoints.length > 1) {
       const extent = this.markerSource.getExtent();
-      this.map.getView().fit(extent, { duration: 1000, padding: [200, 200, 200, 200] });
+      this.map.getView().fit(extent, { duration: 1000, padding: [200, 200, 200, 200], minResolution: .25 });
     }
   }
 

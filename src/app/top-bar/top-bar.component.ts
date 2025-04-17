@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { KeyValue } from '@angular/common';
+import { RoutePlanningComponent } from '../route-planning/route-planning.component';
 
 
 @Component({
@@ -8,7 +9,7 @@ import { KeyValue } from '@angular/common';
   templateUrl: './top-bar.component.html',
   styleUrl: './top-bar.component.css'
 })
-export class TopBarComponent {
+export class TopBarComponent implements OnInit {
 
   pages = {
     RoutePlanning: {
@@ -31,8 +32,14 @@ export class TopBarComponent {
     Zones: "Zones",
   }
   public selectedLink = this.pages.RoutePlanning.pageTitle;
+
+  ngOnInit(): void {
+    this.selectedLink = localStorage.getItem("selectedLink") ?? this.pages.RoutePlanning.pageTitle;
+  }
+
   public selectLink(linkText: string) {
     this.selectedLink = linkText;
+    localStorage.setItem("selectedLink", linkText);
   }
 
   /**used so the keyvalue pipe doesn't sort the pages alphabetically */

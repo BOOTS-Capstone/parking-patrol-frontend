@@ -66,6 +66,11 @@ export class RoutesComponent implements OnInit {
   }
 
   selectRoute(route: Route) {
+    //if there is currently a route being edited, don't let 
+    //a new route be selected
+    // if (this.mapDataService.allowRouteEditing) {
+    //   return
+    // }
     this.cancelEdit();
     this.selectedRoute = route;
     localStorage.setItem("selectedRouteID", route.route_id.toString());

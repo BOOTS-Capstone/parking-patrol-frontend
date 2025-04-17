@@ -35,12 +35,17 @@ export class ZonesComponent {
   ) { }
 
   selectZone(zone: Zone) {
+    console.log(`selecting zone_id: ${zone.id}, name: ${zone.name} `)
     this.selectedZone = zone;
+    this.mapDataService.setSelectedZone(zone);
   }
 
   ngOnInit(): void {
     this.zoneCreationView = false;
     this.loadZones();
+    this.mapDataService.zones$.subscribe(zones => {
+      this.zones = zones;
+    })
     this.mapDataService.zoneCreated$.subscribe((coords:[number, number][]) => {
       this.openDialog(coords);
       // this.zoneEdited = ;
@@ -81,6 +86,22 @@ export class ZonesComponent {
     });
   }
 
+  deleteZone(zone: Zone) {
+    if (!confirm(`Delete zone "${zone.name}"?`)) {
+      return;
+    }
+    this.zoneService.deleteZone(zone).subscribe({
+      next: () => {
+        this.ngOnInit()
+        this.zoneService.getZones().subscribe(zones => {
+          this.mapDataService.updateZones(zones);
+        });
+        this.closeDialog();
+      },
+      error: err => console.error('Failed to delete zone', err)
+    });
+  }
+
   // Reset form fields
   private resetForm(): void {
     this.zoneName = '';
@@ -115,9 +136,4 @@ export class ZonesComponent {
       }
     );
   }
-
-  deleteZone(zone: Zone) {
-    console.log("deleteZone not implemented yet")
-  }
-
 }

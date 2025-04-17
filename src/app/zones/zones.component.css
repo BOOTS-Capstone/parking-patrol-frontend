@@ -1,71 +1,174 @@
-.content {
-    margin-bottom: 100px;
-}
+/* ------------------------------------------------------------
+   ZONES PANEL LAYOUT (exact same flex column approach as Routes)
+   ------------------------------------------------------------ */
 
-.zones-list {
+   .zones-content {
+    /* display: flex;
+    flex-direction: column;
+    height: 100vh;      
+    overflow: hidden;    */
+    margin-left: auto;
+    margin-right: auto;
     display: flex;
     flex-direction: column;
-    /* max-width: 19vw; */
-    overflow-y: scroll;
-    /* hide scrollbar in Firefox */
-    scrollbar-width: none;
-    /* hide scrollbar in IE 10+ */
-    -ms-overflow-style: none;
-    /* border: 1px solid black; */
+    justify-content: space-between;
+  }
+  
+  .zones-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    background: #000;
+    color: #fff;
+    text-align: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  /* scrollable list area */
+  .zones-list {
+    display: flex;
+    flex-direction: column;
+    row-gap: .2rem;
+    flex: 1 1 auto;      /* take all leftover vertical space */
+    overflow-y: auto;    
+    scrollbar-width: none;      
+    -ms-overflow-style: none;   
   }
   .zones-list::-webkit-scrollbar {
     width: 0;
     height: 0;
   }
-
-.zones-header {
-    font-size: 20pt;
-}
-
-.zone-name {
-    border: 1px solid black;
-    border-radius: 5px;
-    width: fit-content;
-} .zone-name.selected {
-    background-color: gray;
+  
+  /* ------------------------------------------------------------
+     ZONE ROW (same grid pattern as route-row)
+     ------------------------------------------------------------ */
+  .zone-row {
+    display: flex;
+    justify-content: space-between;
+    grid-template-columns: auto .2fr .2fr;
+    /* max-width: 10vw; */
+    align-items: center;
+    /* width: fit-content; */
+    padding: 0.2rem .2rem;
+    border: .01in solid black;
+    /* border-bottom: 1px solid #c4c4c4; */
+    border-radius: 10px;
+    background-color: rgb(233, 233, 233);
+    transition: background 0.2s ease;
     cursor: pointer;
-}
-
-.dialog {
+    font-size: .85rem;
+  }
+  .zone-row:hover {
+    background: #fafafa;
+  }
+  .selected.zone-row {
+    background-color: rgb(180, 180, 180);
+  }
+  
+  /* zone name cell */
+  .zone-name {
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  .zone-name.selected {
+    background: #e3f2fd;
+  }
+  
+  /* button group for edit/save */
+  .zone-actions {
+    display: flex;
+    gap: 0.3rem;
+  }
+  
+  /* all buttons in the row */
+  .zone-row button {
+    background: none;
     border: none;
+    font-size: 0.9rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    cursor: pointer;
+  }
+  .zone-row button:hover:not(:disabled) {
+    opacity: 1;
+  }
+  
+  /* delete “X” styling */
+  .zone-row button[title="Delete Zone"] {
+    color: #e53935;
+  }
+
+  .draw-helptext {
+    margin-top: .5rem;
+    font-style: italic;
+  }
+  
+  /* ------------------------------------------------------------
+     DIALOG STYLING (copying your existing dialog with slight polish)
+     ------------------------------------------------------------ */
+  .dialog {
+    position: absolute;    /* or fixed, depending on how you use it */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    width: 400px;
-}
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    width: 90%;
+    max-width: 400px;
+    padding: 1.5rem;
+    z-index: 1000;
+  }
   
-.form-group {
-    margin-bottom: 15px; 
-}
-  
-.form-group label {
-    display: block; 
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-  
-.form-group input,
-.form-group select {
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  .form-group input,
+  .form-group select {
     width: 100%;
-    padding: 8px;
-    font-size: 14px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
     border: 1px solid #ccc;
     border-radius: 4px;
-}
+  }
   
-.dialog-actions {
-    margin-top: 20px;
+  .dialog-actions {
     display: flex;
     justify-content: flex-end;
-}
+    gap: 0.75rem;
+  }
+  .dialog-actions button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .dialog-actions button[type="button"] {
+    background: #e0e0e0;
+    color: #333;
+  }
+  .dialog-actions button[type="submit"] {
+    background: #1976d2;
+    color: #fff;
+  }
+  .dialog-actions button:hover:not(:disabled) {
+    filter: brightness(0.9);
+  }
   
-.dialog-actions button {
-    padding: 8px 15px;
-    margin-left: 10px;
-}
+  /* empty state */
+  .panel__empty {
+    padding: 1rem;
+    text-align: center;
+    color: #777;
+    font-style: italic;
+  }
   

@@ -23,7 +23,7 @@
 </div>
 <!-- Map container -->
 <div #mapElement id="map" [ngClass]="(currentView == MapView.LiveStatus ? 'live-status' : '')"></div>
-<div #popupElement id="popup" class="ol-popup" *ngIf="currentView == MapView.LiveStatus">
+<div #popupElement id="popup" class="ol-popup" *ngIf="currentView != MapView.RoutePlanning">
     <a href="#" id="popup-closer" class="ol-popup-closer" (click)="closePopup($event)"></a>
     <div id="popup-content" [innerHTML]="popupContent"></div>
 </div>

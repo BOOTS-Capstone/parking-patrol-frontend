@@ -1,5 +1,9 @@
 .main-content {
     display: grid;
+    flex: 1;
+    min-width: 0;
     grid-template-columns: 83vw auto;
     column-gap: 10px;
+    overflow: hidden;
+    padding: 0 1rem 0 1rem;
 }

@@ -19,6 +19,10 @@ export class MapDataService {
   private routeBeingEditedSource = new BehaviorSubject<Route|null>(null);
   routeBeingEdited$ = this.routeBeingEditedSource.asObservable();
 
+  // Holds the selected zone
+  private selectedZoneSource = new BehaviorSubject<Zone|null>(null);
+  selectedZone$ = this.selectedZoneSource.asObservable();
+
   updateWaypoints(waypoints: Waypoint[]): void {
     this.waypointsSource.next(waypoints);
     console.log("Got updated waypoints: ");
@@ -49,6 +53,10 @@ export class MapDataService {
   
   notifyZoneCreation(coordinates: [number, number][]) {
     this.zoneCreatedSource.next(coordinates);
+  }
+
+  setSelectedZone(zone: Zone|null) {
+    this.selectedZoneSource.next(zone);
   }
 
   // setRouteEdited(route: Route): void {
