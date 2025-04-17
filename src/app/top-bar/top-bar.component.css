@@ -8,14 +8,15 @@
     display: flex;
     column-gap: 10px;
     justify-content: flex-end;
-} 
+}
 
 .nav-link {
-
+    font-size: 1.2rem;
 } .nav-link:hover {
     transition: transform 100ms;
     transform: scale(1.03);
 } .nav-link.selected {
-    transform: scale(1.05);
+    transition: all 1s;
+    /* transform: scale(1.05); */
     text-decoration: underline;
 }

@@ -101,7 +101,7 @@ export class RoutesComponent implements OnInit {
     this.mapDataService.setAllowRouteEditing(true);
   }
 
-  bleh() {
+  updateWaypointData() {
     console.log(this.waypoints)
     this.mapDataService.updateWaypoints(this.waypoints)
   }
@@ -204,6 +204,12 @@ export class RoutesComponent implements OnInit {
         console.error('Error updating route:', error);
       }
     );
+  }
+
+  clearCurrentWaypoints(): void {
+    if(confirm("This will remove all waypoints from the current route, are you sure you wish to proceed?")) {
+      this.mapDataService.updateWaypoints([]);
+    }
   }
 
 

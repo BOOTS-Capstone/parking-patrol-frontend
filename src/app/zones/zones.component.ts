@@ -75,6 +75,7 @@ export class ZonesComponent {
       next: () => {
         console.log('Zone added successfully:', newZone);
         this.closeDialog();
+        this.loadZones();
       },
       error: (err) => console.error('Error adding zone:', err)
     });

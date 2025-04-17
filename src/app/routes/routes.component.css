@@ -1,27 +1,235 @@
-.content {
-    margin-bottom: 100px;
-}
+/* ------------------------------------------------------------
+   ROUTES PANEL
+   ------------------------------------------------------------ */
 
-.routes-header {
-    font-size: 20pt;
-}
+   .routes-content {
+        margin-left: auto;
+        margin-right: auto;
+   }
+   .routes-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.75rem 1rem;
+    color: whitesmoke;
+    background-color: black;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 
-.route-name {
-    border: 1px solid black;
-    border-radius: 5px;
-    width: fit-content;
-} .route-name.selected {
-    background-color: gray;
+    /* border-bottom: 1px solid #e0e0e0; */
+  }
+
+  .routes-list {
+    display: flex;
+    flex-direction: column;
+    row-gap: .3rem;
+    max-height: 40vh;
+    /* max-width: 19vw; */
+    overflow-y: scroll;
+    /* hide scrollbar in Firefox */
+    scrollbar-width: none;
+    /* hide scrollbar in IE 10+ */
+    -ms-overflow-style: none;
+    /* border: 1px solid black; */
+  }
+  .routes-list::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+  
+  /* Each route row */
+  .route-row {
+    display: grid;
+    grid-template-columns: auto .2fr .2fr;
+    /* max-width: 10vw; */
+    align-items: center;
+    /* width: fit-content; */
+    padding: 0.2rem .2rem;
+    border-bottom: 1px solid #c4c4c4;
+    border-radius: 10px;
+    background-color: rgb(233, 233, 233);
+    transition: background 0.2s ease;
     cursor: pointer;
-} 
+    font-size: .85rem;
 
-.waypoints-list {
-    display: grid; 
-    grid-template-columns: auto auto auto auto; 
-    gap: 3px; 
-    width: fit-content;
-}
+  }
+  .route-row:hover {
+    background: #fafafa;
+  }
+  .selected.route-row {
+    background-color: rgb(180, 180, 180);
+  }
+  
+  /* Route name cell */
+  .route-row .route-name {
+    padding: 0.05rem 0.05rem;
+    transition: background 0.2s;
+  }
 
-.waypoints {
-    margin-top: .3in;
-}
+  .route-name {
+    /* width: fit-content; */
+    /* max-width: 5rem; */
+  }
+  
+  /* Action buttons (Edit / Save / Cancel) */
+  .route-row button {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    transition: scale(1.1);
+  }
+  .route-row button:hover:not(:disabled) {
+    opacity: 1;
+  }
+  
+  /* Delete “X” */
+  .route-row button[title="Delete Route"] {
+    color: #e53935;
+  }
+
+  .cancel-edit  {
+    margin-top: 0.25rem;
+    padding: 0.25rem .5rem;
+    background: none;
+    border: 1px solid #d21f19;
+    color: #d21f19;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  .cancel-edit :hover:not(:disabled) {
+    background: #e3f2fd;
+  }
+
+  .save-edit  {
+    margin-top: 0.25rem;
+    margin-left: .25rem;
+    padding: 0.25rem .5rem;
+    background: none;
+    border: 1px solid #0ab155;
+    color: #0ab155;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  .save-edit :hover:not(:disabled) {
+    background: #e3f2fd;
+  }
+
+  button.create-route  {
+    margin-top: 0.25rem;
+    padding: 0.25rem .5rem;
+    background: none;
+    border: 1px solid #0a66b1;
+    color: #0a66b1;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  button.create-route :hover:not(:disabled) {
+    background: #e3f2fd;
+  }
+
+  button.cancel-create-route  {
+    margin-top: 0.25rem;
+    margin-left: .25rem;
+    padding: 0.25rem .5rem;
+    background: none;
+    border: 1px solid #d21f19;
+    color: #d21f19;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  button.cancel-create-route :hover:not(:disabled) {
+    background: #e3f2fd;
+  }
+
+  button.submit-route  {
+    margin-top: 0.25rem;
+    margin-left: .25rem;
+    padding: 0.25rem .5rem;
+    background: none;
+    border: 1px solid #0ab155;
+    color: #0ab155;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  button.submit-route :hover:not(:disabled) {
+    background: #e3f2fd;
+  }
+  
+  
+  /* ------------------------------------------------------------
+     WAYPOINTS GRID
+     ------------------------------------------------------------ */
+  .modern-grid {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    gap: 0.3rem;
+    padding: .1rem;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  /* Headers */
+  .modern-grid > div:nth-child(-n+4) {
+    font-weight: 600;
+    color: #555;
+  }
+  
+  /* Cells */
+  .modern-grid input,
+  .modern-grid > div {
+    padding: 0.05rem 0.05rem;
+    font-size: 0.8rem;
+    border-radius: 4px;
+  }
+  
+  /* Number inputs */
+  .modern-grid input {
+    border: 1px solid #ccc;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    max-width: 5rem;
+    overflow-x: scroll;
+  }
+  .modern-grid input:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 2px rgba(25,118,210,0.2);
+  }
+  
+  /* Remove‑waypoint “X” */
+  .modern-grid button {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    color: #e53935;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .modern-grid button:hover:not(:disabled) {
+    opacity: 1;
+  }
+  .modern-grid button:disabled {
+    opacity: 0.3;
+  }
+  
+  /* Clear all button */
+  .clear-current-waypoints button {
+    margin-top: 0.25rem;
+    padding: 0.25rem .5rem;
+    background: none;
+    border: 1px solid #d21f19;
+    color: #d21f19;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  .clear-current-waypoints button:hover:not(:disabled) {
+    background: #e3f2fd;
+  }
+  
+  /* Empty‑state text */
+  .panel__empty {
+    padding: 1rem;
+    color: #777;
+    font-style: italic;
+  }
+  

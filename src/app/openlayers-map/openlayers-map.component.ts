@@ -465,6 +465,7 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
 
   clearPath(): void {
     this.waypoints = [];
+    this.mapDataService.updateWaypoints([]);
     this.markerSource.clear();
     this.pathFeature.setGeometry(undefined);
   }

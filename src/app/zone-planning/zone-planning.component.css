@@ -1,5 +1,5 @@
 .main-content {
     display: grid;
-    grid-template-columns: 80vw 20vw;
+    grid-template-columns: 83vw auto;
     column-gap: 10px;
 }

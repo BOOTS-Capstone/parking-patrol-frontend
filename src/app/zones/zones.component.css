@@ -2,6 +2,22 @@
     margin-bottom: 100px;
 }
 
+.zones-list {
+    display: flex;
+    flex-direction: column;
+    /* max-width: 19vw; */
+    overflow-y: scroll;
+    /* hide scrollbar in Firefox */
+    scrollbar-width: none;
+    /* hide scrollbar in IE 10+ */
+    -ms-overflow-style: none;
+    /* border: 1px solid black; */
+  }
+  .zones-list::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
 .zones-header {
     font-size: 20pt;
 }

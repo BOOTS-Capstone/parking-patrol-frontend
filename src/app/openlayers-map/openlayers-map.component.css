@@ -1,7 +1,7 @@
 #map {
-    width: 80vw;
     height: 80vh;
     border: 2px solid black;
+    border-radius: 5px;
 } #map.live-status {
     width: 98%;
     margin-left: auto;
@@ -99,4 +99,17 @@
     width: fit-content;
   } .show-zones-controls.show-zones {
       background-color: gray;
+  }
+
+  button.toggle-satellite  {
+    margin-top: 0.25rem;
+    padding: 0.25rem .5rem;
+    background: none;
+    border: 1px solid black;
+    color: black;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  button.toggle-satellite :hover:not(:disabled) {
+    background: #e3f2fd;
   }
