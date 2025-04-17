@@ -1,8 +1,16 @@
 .main-content {
+    display: flex;
+    justify-content: space-between;
     background-color: rgb(128, 220, 236);
     height: fit-content;
     padding: 5px;
     margin-bottom: 10px;
+
+}
+
+.page-title {
+    font-size: 2rem;
+    padding-left: .5rem;
 }
 .nav-links {
     display: flex;
@@ -11,6 +19,8 @@
 }
 
 .nav-link {
+    display:flex;
+    align-items: center;
     font-size: 1.2rem;
 } .nav-link:hover {
     transition: transform 100ms;

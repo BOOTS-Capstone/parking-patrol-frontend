@@ -17,8 +17,8 @@
                 </div>
             </div>
         </div>
-        <button class="cancel-edit" (click)="cancelEdit()" *ngIf="(mapDataService.routeBeingEdited$ | async)">Cancel Editing</button>
-        <button class="save-edit" (click)="saveRoute()" *ngIf="(mapDataService.routeBeingEdited$ | async)">Save Changes</button>
+        <button class="cancel-edit" (click)="cancelEdit()" *ngIf="(mapDataService.allowRouteEditing$ | async)">Cancel Editing</button>
+        <button class="save-edit" (click)="saveRoute()" *ngIf="(mapDataService.allowRouteEditing$ | async)">Save Changes</button>
     </div>
 
     <div>
@@ -38,13 +38,13 @@
     <div class="waypoints">
         <div *ngIf="waypoints.length > 0; else noWaypoints">
             <div class="route-name-waypoints">
-                Waypoints for route: <b>{{selectedRoute?.name}}</b>
+                Waypoints for route: <br><b>{{selectedRoute?.name}}</b>
             </div>
             <div class="waypoints-list modern-grid">
                 <!-- Header row -->
-                <div>Latitude</div>
-                <div>Longitude</div>
-                <div>Offset</div>
+                <div class="waypoints-list header">Latitude</div>
+                <div class="waypoints-list header">Longitude</div>
+                <div class="waypoints-list header">Offset</div>
                 <div></div>
                 <!-- Data rows -->
                 <ng-container class="waypoints-list" >

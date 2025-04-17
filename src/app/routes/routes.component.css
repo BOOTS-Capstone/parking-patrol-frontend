@@ -30,6 +30,7 @@
     scrollbar-width: none;
     /* hide scrollbar in IE 10+ */
     -ms-overflow-style: none;
+    background-color: whitesmoke;
     /* border: 1px solid black; */
   }
   .routes-list::-webkit-scrollbar {
@@ -45,7 +46,8 @@
     align-items: center;
     /* width: fit-content; */
     padding: 0.2rem .2rem;
-    border-bottom: 1px solid #c4c4c4;
+    border: .01in solid black;
+    /* border-bottom: 1px solid #c4c4c4; */
     border-radius: 10px;
     background-color: rgb(233, 233, 233);
     transition: background 0.2s ease;
@@ -167,6 +169,7 @@
     padding: .3rem;
     /* border: 1px solid ; */
   }
+  
 
   .route-name-waypoints {
     font-size: 1.25rem;
@@ -177,6 +180,11 @@
     background-color: black;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
+  }
+
+  .waypoints-list .header {
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
 
   .modern-grid {

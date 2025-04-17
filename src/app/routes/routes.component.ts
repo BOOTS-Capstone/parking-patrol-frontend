@@ -102,7 +102,7 @@ export class RoutesComponent implements OnInit {
   }
 
   updateWaypointData() {
-    console.log(this.waypoints)
+    // console.log(this.waypoints)
     this.mapDataService.updateWaypoints(this.waypoints)
   }
 
@@ -113,7 +113,10 @@ export class RoutesComponent implements OnInit {
     this.mapDataService.setAllowRouteEditing(false);
   }
 
+  // Saves changes made to an existing route
   saveRoute(): void {
+    // this.mapDataService.setRouteBeingEdited(null);
+    this.mapDataService.setAllowRouteEditing(false);
     this.mapDataService.routeBeingEdited$
       .pipe(take(1))
       .subscribe(route => {
@@ -122,7 +125,9 @@ export class RoutesComponent implements OnInit {
         this.routeService.updateRoute(route).subscribe(
           _ => {
             this.loadRoutes();
-            this.cancelEdit();
+            this.mapDataService.setRouteBeingEdited(null);
+            
+            // this.cancelEdit();
           },
           err => console.error('Error updating route', err)
         );
@@ -132,17 +137,23 @@ export class RoutesComponent implements OnInit {
 
   // Sends the new route and its waypoints to the createRoute endpoint.
   submitRoute(): void {
-    if (!this.newRouteName.trim() || this.waypoints.length === 0) {
+    if (!this.newRouteName.trim() && this.waypoints.length === 0) {
       alert('Please enter a route name and at add least two waypoints to the new route');
       return;
     }
     else if (!this.newRouteName.trim()) {
-       alert('Please enter a name for the new route');
+       alert('Please enter a name for the new route (40 characters');
        return;
     }
     else if (this.waypoints.length === 0) {
       alert(`Please add at least two waypoints to the new route`);
     }
+    else if(this.newRouteName.length > 45) {
+      alert(`Route name is too long. Please enter 40 characters or less (Currently at ${this.newRouteName.length} characters)`);
+      return;
+    }
+    this.routeCreationView = false;
+    this.mapDataService.setAllowRouteEditing(false);
 
     const waypoints = this.mapDataService.currentWaypoints;
     const newRoute = { name: this.newRouteName, waypoints: waypoints };
@@ -158,8 +169,8 @@ export class RoutesComponent implements OnInit {
         console.error('Error creating route:', error);
       }
     );
-    this.routeCreationView = false;
-    this.mapDataService.setAllowRouteEditing(false);
+    this.newRouteName = '';
+
   }
 
   onCreateRouteClick() {
