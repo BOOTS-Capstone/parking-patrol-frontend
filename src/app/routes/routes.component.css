@@ -5,6 +5,10 @@
    .routes-content {
         margin-left: auto;
         margin-right: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        /* height: 1fr; */
    }
    .routes-header {
     font-size: 1.5rem;
@@ -21,9 +25,10 @@
 
   .routes-list {
     display: flex;
+    flex: 0 0 auto;
     flex-direction: column;
     row-gap: .3rem;
-    max-height: 40vh;
+    max-height: 30vh;
     /* max-width: 19vw; */
     overflow-y: scroll;
     /* hide scrollbar in Firefox */
@@ -172,14 +177,27 @@
   
 
   .route-name-waypoints {
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 600;
     text-align: center;
-    padding: 0.75rem 1rem;
+    padding: 0.25rem .75rem;
     color: whitesmoke;
     background-color: black;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
+  }
+
+  .waypoints-list.modern-grid {
+    /* flex: 1 1 auto;       */
+    background-color: whitesmoke;
+    
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .waypoints-list.modern-grid::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 
   .waypoints-list .header {
@@ -196,6 +214,12 @@
     border-top: 1px solid #e0e0e0;
     width: 100%;              /* make grid fill its container */
     box-sizing: border-box;   /* include padding in width */
+    max-height: 30vh;
+    overflow-y: scroll;
+    /* hide scrollbar in Firefox */
+    scrollbar-width: none;
+    /* hide scrollbar in IE 10+ */
+    -ms-overflow-style: none;
   }
 
  
