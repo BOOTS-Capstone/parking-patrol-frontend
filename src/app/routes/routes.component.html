@@ -17,8 +17,8 @@
                 </div>
             </div>
         </div>
-        <button class="cancel-edit" (click)="cancelEdit()" *ngIf="(mapDataService.routeBeingEdited$ | async)">Cancel</button>
-        <button class="save-edit" (click)="saveRoute()" *ngIf="(mapDataService.routeBeingEdited$ | async)">Save</button>
+        <button class="cancel-edit" (click)="cancelEdit()" *ngIf="(mapDataService.routeBeingEdited$ | async)">Cancel Editing</button>
+        <button class="save-edit" (click)="saveRoute()" *ngIf="(mapDataService.routeBeingEdited$ | async)">Save Changes</button>
     </div>
 
     <div>
@@ -49,8 +49,8 @@
                 <!-- Data rows -->
                 <ng-container class="waypoints-list" >
                     <ng-container *ngFor="let waypoint of waypoints; let i = index">
-                        <input style="width: 100px; overflow-x: scroll;" value="{{ waypoint.latitude }}" [disabled]="!(mapDataService.routeBeingEdited$ | async)" >
-                        <input style="width: 100px; overflow-x: hidden;" value="{{ waypoint.longitude }}" [disabled]="!(mapDataService.routeBeingEdited$ | async)">
+                        <input value="{{ waypoint.latitude }}" [disabled]="!(mapDataService.routeBeingEdited$ | async)" >
+                        <input value="{{ waypoint.longitude }}" [disabled]="!(mapDataService.routeBeingEdited$ | async)">
                         <input 
                         id="heading-{{i}}" 
                         type="number" 
