@@ -22,9 +22,6 @@
     </div>
 
     <div>
-        <!-- Input for new route name -->
-        
-        <!-- Button to submit the new route -->
         <button class="create-route" (click)="onCreateRouteClick()" *ngIf="(mapDataService.routeBeingEdited$ | async) == null">Create Route</button>
         <button class="cancel-create-route" (click)="selectPreviousRoute()" *ngIf="routeCreationView">Cancel</button>
         

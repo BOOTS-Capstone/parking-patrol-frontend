@@ -14,7 +14,6 @@ export class RouteService {
   constructor(private http: HttpClient, private mapDataService: MapDataService) {}
 
   getRoutes(): Observable<Route[]> {
-    // return this.http.get<Route[]>(`${environment.apiURL}/getRoutes`);
     const headers = new HttpHeaders({
       'ngrok-skip-browser-warning': 'true',
     });

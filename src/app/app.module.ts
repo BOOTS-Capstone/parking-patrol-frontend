@@ -25,9 +25,6 @@ export const routes = [
   {path: 'route-planning', component: RoutePlanningComponent},
   {path: '', component: RoutePlanningComponent},
   {path: 'zones', component: ZonePlanningComponent},
-
-  //it's unhappy with the pathMatch value, idk why
-  // {path: '', redirectTo: '/route-planning', pathMatch: "full" },
 ];
 
 @NgModule({

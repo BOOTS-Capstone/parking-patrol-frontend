@@ -2,9 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ZoneService } from './zone.service';
-// import { WaypointService } from '../waypoint.service';
 import { Zone } from './zone';
-// import { Waypoint } from '../waypoint';
 import { MapDataService } from '../map-data.service';
 import { NgModel } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -22,7 +20,7 @@ export class ZonesComponent {
   editingZone: Zone | null = null;
   zoneType: 'handicap' | 'fire' = 'fire'; 
   zoneName: string = '';
-  currentCoordinates: [number, number][] = []; // Coordinates for the new zone
+  currentCoordinates: [number, number][] = []; 
 
   zoneEdited: boolean = false;
   zoneCreationView: boolean = false;
@@ -30,8 +28,7 @@ export class ZonesComponent {
 
   constructor(
     private zoneService: ZoneService,
-    // private waypointService: WaypointService,
-    private mapDataService: MapDataService  // Inject the shared service
+    private mapDataService: MapDataService  
   ) { }
 
   selectZone(zone: Zone) {
@@ -48,8 +45,6 @@ export class ZonesComponent {
     })
     this.mapDataService.zoneCreated$.subscribe((coords:[number, number][]) => {
       this.openDialog(coords);
-      // this.zoneEdited = ;
-      // console.log('Zone edited:', edited);
     });
   }
 
@@ -102,7 +97,6 @@ export class ZonesComponent {
     });
   }
 
-  // Reset form fields
   private resetForm(): void {
     this.zoneName = '';
     this.zoneType = 'fire';
@@ -121,15 +115,7 @@ export class ZonesComponent {
       (data: Zone[]) => {
         this.zones = data;
         this.mapDataService.updateZones(data);
-        console.log('Zones loaded:', this.zones);
-  //       const savedSelectedZoneID = localStorage.getItem("selectedZoneID") ?? -1;
-  //       if (savedSelectedZoneID != -1) {
-  //         this.zones.forEach(zone => {
-  //           if (zone.zone_id == parseInt(savedSelectedZoneID)) {
-  //             this.selectZone(zone);
-  //           }
-  //         })
-  //       }
+        // console.log('Zones loaded:', this.zones);
       },
       (error) => {
         console.error('Error loading zones:', error);

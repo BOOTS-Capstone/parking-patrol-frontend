@@ -35,7 +35,6 @@ export class ZoneService {
   }
 
   private createGeoJsonFeature(zone: Zone): any {
-    // Ensure polygon is closed (first/last points match)
     const coordinates = this.ensureClosedPolygon(zone.coordinates);
 
     return {

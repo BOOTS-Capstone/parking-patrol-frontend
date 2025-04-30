@@ -10,11 +10,6 @@
             >
               {{ zone.name }}
           </div>
-          <!-- Edit and save buttons currently not in use, ngif false -->
-          <!-- <div>
-              <button *ngIf="selectedZone == zone && false">Edit</button>
-              <button *ngIf="editingZone == zone">Save</button>
-          </div> -->
           <div>
               <button title="Delete Zone" (click)="deleteZone(zone)">X</button>
           </div>
@@ -52,7 +47,6 @@
     </div>
   </div>
 </div>
-<!-- <app-waypoints [route]="selectedRoute" [waypoints]="waypoints"></app-waypoints> -->
   
 <ng-template #noZones>
     <p>No zones found.</p>

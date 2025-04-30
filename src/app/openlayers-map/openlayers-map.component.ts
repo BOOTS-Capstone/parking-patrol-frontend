@@ -195,7 +195,6 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       // Remove duplicate closing coordinate
       coords.pop();
       
-      // Send to map data service
       this.mapDataService.notifyZoneCreation(coords);
       console.log('Zone created:', coords);
     });
@@ -207,7 +206,6 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     });
     this.map.addOverlay(this.overlay);
     
-    // 2) subscribe to zone selections:
     this.mapDataService.selectedZone$.subscribe(zone => {
       if (!zone) {
         this.overlay.setPosition(undefined);
@@ -447,18 +445,14 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     }
 
     zones.forEach(z => {
-      // project each [lon, lat] → [x, y]
       const coordsProjected = z.coordinates.map(c => fromLonLat(c));
-      // wrap in an array-of-rings for a single polygon
       const polygon = new Polygon([ coordsProjected ]);
       const feature = new Feature(polygon);
 
-      // choose colors
       const isHandicap = z.type === 'handicap';
       const strokeColor = isHandicap ? 'blue' : '#FF0000';
       const fillColor   = isHandicap ? 'rgba(0,0,255,0.2)' : 'rgba(255,0,0,0.2)';
 
-      // apply style
       feature.setStyle(new Style({
         stroke: new Stroke({ color: strokeColor, width: 2 }),
         fill:   new Fill({   color: fillColor   })
@@ -467,15 +461,6 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
       feature.set('zone', z);
       this.zoneSource.addFeature(feature);
     });
-
-    // optionally fit the view to show all zones
-    // if (zones.length) {
-    //   const extent = this.zoneSource.getExtent();
-    //   this.map.getView().fit(extent, {
-    //     duration: 500,
-    //     padding: [50, 50, 50, 50]
-    //   });
-    // }
   }
 
   updatePath(color: string): void {
@@ -575,8 +560,6 @@ export class OpenlayersMapComponent implements OnInit, AfterViewInit {
     }));
     feature.set('drone_state', drone_state);
     this.markerSource.addFeature(feature);
-    // const extent = this.markerSource.getExtent();
-    // this.map.getView().fit(extent, { duration: 500, padding: [500, 500, 500, 500] });
   }
 
   updateMapWithWaypoints(waypoints: Waypoint[]): void {

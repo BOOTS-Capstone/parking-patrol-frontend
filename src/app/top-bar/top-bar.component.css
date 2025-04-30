@@ -27,6 +27,5 @@
     transform: scale(1.03);
 } .nav-link.selected {
     transition: all 1s;
-    /* transform: scale(1.05); */
     text-decoration: underline;
 }
